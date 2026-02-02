@@ -1,0 +1,2402 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>深淵の探偵録 - 本格推理ゲーム</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Hiragino Mincho ProN', 'Yu Mincho', 'MS Mincho', serif;
+      background-color: #0d0d0d;
+      color: #e8e4d9;
+      min-height: 100vh;
+      line-height: 1.8;
+      font-size: 16px;
+    }
+    
+    /* ヘッダー */
+    .header {
+      background: linear-gradient(to bottom, #1a0a0a, #0d0d0d);
+      text-align: center;
+      padding: 2rem 1rem;
+      border-bottom: 2px solid #6b0000;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .header::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(ellipse at center, rgba(107, 0, 0, 0.2) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    
+    .header h1 {
+      font-size: 1.6rem;
+      font-weight: bold;
+      margin-bottom: 0.25rem;
+      color: #c9a55c;
+      text-shadow: 2px 2px 8px rgba(107, 0, 0, 0.8);
+      letter-spacing: 0.2em;
+    }
+    
+    .header p {
+      color: #8a8070;
+      font-size: 0.875rem;
+      letter-spacing: 0.1em;
+    }
+    
+    /* ゲームヘッダー */
+    .game-header {
+      background: linear-gradient(to bottom, #1a0a0a, #0d0d0d);
+      padding: 0.75rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #3d1515;
+    }
+    
+    /* ボタン共通 */
+    .btn {
+      padding: 0.75rem 1rem;
+      border: none;
+      border-radius: 0.5rem;
+      font-size: 1rem;
+      cursor: pointer;
+      min-height: 48px;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+    
+    .btn:active {
+      transform: scale(0.98);
+    }
+    
+    .btn-primary {
+      background: linear-gradient(to bottom, #6b0000, #3d0000);
+      color: #e8e4d9;
+      border: 1px solid #8b2020;
+      box-shadow: 0 4px 15px rgba(107, 0, 0, 0.4);
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 4px 20px rgba(107, 0, 0, 0.6);
+    }
+    
+    .btn-secondary {
+      background: linear-gradient(to bottom, #2d1515, #1a0a0a);
+      color: #c9a55c;
+      border: 1px solid #3d1515;
+    }
+    
+    .btn-danger {
+      background: #3d0000;
+      color: white;
+      border: 1px solid #6b0000;
+    }
+    
+    .btn-amber {
+      background: linear-gradient(to bottom, #8b6914, #5c4510);
+      color: #fff;
+      border: 1px solid #c9a55c;
+      box-shadow: 0 4px 15px rgba(201, 165, 92, 0.3);
+    }
+    
+    .btn-full {
+      width: 100%;
+      padding: 1rem;
+      font-weight: bold;
+      font-size: 1.125rem;
+    }
+    
+    .btn:disabled {
+      background: #1a0a0a;
+      color: #444;
+      cursor: not-allowed;
+      border-color: #2d1515;
+      box-shadow: none;
+    }
+    
+    /* カード */
+    .card {
+      background: linear-gradient(to bottom, #1a0a0a, #120808);
+      border-radius: 0.5rem;
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+      border: 1px solid #3d1515;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+    }
+    
+    .card-title {
+      font-size: 1.125rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+      color: #c9a55c;
+      border-bottom: 1px solid #3d1515;
+      padding-bottom: 0.5rem;
+    }
+    
+    /* エピソードカード */
+    .episode-card {
+      background: linear-gradient(135deg, #1a0a0a 0%, #0d0d0d 100%);
+      border-radius: 0.5rem;
+      padding: 1.25rem;
+      margin-bottom: 0.75rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      border: 1px solid #3d1515;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .episode-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(to right, #6b0000, transparent);
+    }
+
+    .episode-card::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(ellipse at top right, rgba(107, 0, 0, 0.1) 0%, transparent 50%);
+      pointer-events: none;
+    }
+    
+    .episode-card:active {
+      transform: scale(0.98);
+      border-color: #6b0000;
+      box-shadow: 0 0 20px rgba(107, 0, 0, 0.3);
+    }
+    
+    .episode-card.premium {
+      background: linear-gradient(135deg, #1a0f05 0%, #0d0d0d 100%);
+    }
+    
+    .episode-card.premium::before {
+      background: linear-gradient(to right, #8b6914, transparent);
+    }
+    
+    .episode-card.premium .premium-badge {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      background: linear-gradient(to right, #8b6914, #c9a55c);
+      color: #0d0d0d;
+      font-size: 0.625rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+      font-weight: bold;
+    }
+    
+    .episode-title {
+      font-size: 1.125rem;
+      font-weight: bold;
+      margin-bottom: 0.25rem;
+      color: #e8e4d9;
+    }
+    
+    .episode-subtitle {
+      color: #8a8070;
+      font-size: 0.875rem;
+    }
+    
+    .episode-location {
+      color: #6b0000;
+      font-size: 0.75rem;
+      margin-top: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    
+    .badge {
+      display: inline-block;
+      font-size: 0.75rem;
+      padding: 0.25rem 0.75rem;
+      border-radius: 0.25rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .badge-free {
+      background: #1a2a1a;
+      color: #6b8b6b;
+      border: 1px solid #2a4a2a;
+    }
+    
+    .badge-clear {
+      background: #0a1a2a;
+      color: #6b8bab;
+      border: 1px solid #1a3a5a;
+    }
+    
+    /* ナビゲーション */
+    .nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(to top, #0d0d0d, #1a0a0a);
+      display: flex;
+      justify-content: space-around;
+      padding: 0.5rem 0;
+      border-top: 2px solid #6b0000;
+    }
+    
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0.5rem 1rem;
+      color: #444;
+      cursor: pointer;
+      border: none;
+      background: none;
+      font-size: 0.75rem;
+      min-width: 60px;
+      font-family: inherit;
+      transition: color 0.2s;
+    }
+    
+    .nav-item.active {
+      color: #c9a55c;
+    }
+    
+    .nav-icon {
+      font-size: 1.5rem;
+      margin-bottom: 0.25rem;
+    }
+    
+    /* 探索エリア */
+    .explore-scene {
+      min-height: 380px;
+      position: relative;
+      background: linear-gradient(to bottom, #1a0a0a, #0d0d0d);
+      border-bottom: 1px solid #3d1515;
+      overflow: hidden;
+    }
+
+    .explore-scene::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: 
+        radial-gradient(ellipse at 20% 30%, rgba(107, 0, 0, 0.15) 0%, transparent 40%),
+        radial-gradient(ellipse at 80% 70%, rgba(107, 0, 0, 0.1) 0%, transparent 40%);
+      pointer-events: none;
+    }
+    
+    .scene-label {
+      position: absolute;
+      top: 1rem;
+      left: 1rem;
+      background: rgba(107, 0, 0, 0.9);
+      padding: 0.5rem 1rem;
+      border-radius: 0.25rem;
+      font-weight: bold;
+      font-size: 0.875rem;
+      border: 1px solid #8b2020;
+      z-index: 10;
+    }
+    
+    .area-point {
+      position: absolute;
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: transform 0.2s;
+      z-index: 5;
+    }
+    
+    .area-point:active {
+      transform: scale(0.9);
+    }
+    
+    .area-point.undiscovered {
+      background: rgba(107, 0, 0, 0.3);
+      border: 2px solid #6b0000;
+      animation: pulse 2s infinite;
+    }
+    
+    .area-point.discovered {
+      background: rgba(34, 80, 34, 0.3);
+      border: 2px solid #228b22;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { 
+        opacity: 1; 
+        box-shadow: 0 0 10px rgba(107, 0, 0, 0.5), inset 0 0 10px rgba(107, 0, 0, 0.2);
+      }
+      50% { 
+        opacity: 0.6; 
+        box-shadow: 0 0 25px rgba(107, 0, 0, 0.8), inset 0 0 15px rgba(107, 0, 0, 0.4);
+      }
+    }
+    
+    .scene-description {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(to top, rgba(13, 13, 13, 0.98), transparent);
+      padding: 4rem 1rem 1rem;
+    }
+    
+    /* シーン選択タブ */
+    .scene-tabs {
+      display: flex;
+      gap: 0.5rem;
+      padding: 0.75rem;
+      background: #1a0a0a;
+      overflow-x: auto;
+      border-bottom: 1px solid #3d1515;
+    }
+    
+    .scene-tab {
+      padding: 0.5rem 1rem;
+      border-radius: 0.25rem;
+      background: #2d1515;
+      border: 1px solid #3d1515;
+      color: #8a8070;
+      cursor: pointer;
+      white-space: nowrap;
+      font-size: 0.875rem;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+    
+    .scene-tab.active {
+      background: #6b0000;
+      color: #e8e4d9;
+      border-color: #8b2020;
+    }
+    
+    /* 進行バー */
+    .progress-section {
+      background: #1a0a0a;
+      padding: 1rem;
+      border-bottom: 1px solid #3d1515;
+    }
+    
+    .progress-info {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.875rem;
+      color: #8a8070;
+      margin-bottom: 0.5rem;
+    }
+    
+    .progress-bar {
+      height: 8px;
+      background: #2d1515;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(to right, #6b0000, #8b2020);
+      transition: width 0.3s;
+      box-shadow: 0 0 10px rgba(107, 0, 0, 0.5);
+    }
+    
+    /* モーダル */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.95);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      z-index: 100;
+    }
+    
+    .modal {
+      background: linear-gradient(to bottom, #1a0a0a, #0d0d0d);
+      border-radius: 0.5rem;
+      padding: 1.5rem;
+      max-width: 400px;
+      width: 100%;
+      border: 2px solid #6b0000;
+      box-shadow: 0 0 50px rgba(107, 0, 0, 0.4);
+    }
+    
+    .modal-title {
+      font-size: 1.25rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+      color: #c9a55c;
+    }
+    
+    /* 選択肢 */
+    .choice-btn {
+      width: 100%;
+      padding: 1rem;
+      text-align: left;
+      background: #2d1515;
+      border: 2px solid #3d1515;
+      border-radius: 0.5rem;
+      color: #e8e4d9;
+      margin-bottom: 0.75rem;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: all 0.2s;
+      font-family: inherit;
+      line-height: 1.6;
+    }
+    
+    .choice-btn:hover {
+      border-color: #6b0000;
+    }
+
+    .choice-btn.selected {
+      background: rgba(107, 0, 0, 0.3);
+      border-color: #6b0000;
+      box-shadow: 0 0 15px rgba(107, 0, 0, 0.3);
+    }
+    
+    /* 結果画面 */
+    .result-correct {
+      background: rgba(34, 80, 34, 0.2);
+      border-color: #228b22;
+    }
+    
+    .result-wrong {
+      background: rgba(107, 0, 0, 0.2);
+      border-color: #6b0000;
+    }
+    
+    /* 手がかりリスト */
+    .clue-list {
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+    
+    .clue-item {
+      background: #2d1515;
+      border-radius: 0.5rem;
+      padding: 1rem;
+      margin-bottom: 0.5rem;
+      border-left: 3px solid #6b0000;
+    }
+    
+    .clue-name {
+      font-weight: bold;
+      color: #c9a55c;
+      margin-bottom: 0.25rem;
+    }
+    
+    /* 解決編 */
+    .solution-text {
+      white-space: pre-line;
+      line-height: 2;
+      color: #e8e4d9;
+      font-size: 0.9375rem;
+    }
+    
+    /* プレミアム */
+    .premium-feature {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid #3d1515;
+    }
+    
+    .premium-feature:last-child {
+      border-bottom: none;
+    }
+    
+    .premium-icon {
+      font-size: 1.5rem;
+    }
+    
+    /* コンテナ */
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 0 1rem;
+      padding-bottom: 80px;
+    }
+    
+    /* 非表示 */
+    .hidden {
+      display: none !important;
+    }
+    
+    /* スクロール領域 */
+    .scrollable {
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* イントロ画面 */
+    .intro-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: calc(100vh - 60px);
+      padding: 1.5rem;
+      text-align: center;
+      position: relative;
+    }
+
+    .intro-screen::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(ellipse at center top, rgba(107, 0, 0, 0.2) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    
+    .intro-icon {
+      font-size: 5rem;
+      margin-bottom: 1rem;
+      text-shadow: 0 0 30px rgba(107, 0, 0, 0.8);
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    
+    .intro-story {
+      background: linear-gradient(to bottom, #2d1515, #1a0a0a);
+      border-radius: 0.5rem;
+      padding: 1.25rem;
+      margin: 1.5rem 0;
+      text-align: left;
+      border: 1px solid #3d1515;
+      border-left: 3px solid #6b0000;
+      position: relative;
+    }
+
+    /* 手がかりバッジ */
+    .clue-btn {
+      position: relative;
+    }
+    
+    .clue-badge {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: linear-gradient(to bottom, #6b0000, #3d0000);
+      color: white;
+      font-size: 0.75rem;
+      min-width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid #1a0a0a;
+      box-shadow: 0 0 10px rgba(107, 0, 0, 0.5);
+    }
+
+    /* 装飾 */
+    .divider {
+      height: 1px;
+      background: linear-gradient(to right, transparent, #6b0000, transparent);
+      margin: 1rem 0;
+    }
+    
+    .chapter-mark {
+      text-align: center;
+      color: #6b0000;
+      font-size: 0.875rem;
+      margin-bottom: 1rem;
+      letter-spacing: 0.2em;
+    }
+
+    /* スリラー演出 */
+    .thriller-text {
+      color: #8b2020;
+      font-weight: bold;
+    }
+
+    .warning-box {
+      background: rgba(107, 0, 0, 0.2);
+      border: 1px solid #6b0000;
+      border-radius: 0.5rem;
+      padding: 1rem;
+      margin: 1rem 0;
+      text-align: center;
+    }
+
+    .warning-box .icon {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script>
+    // ========== エピソードデータ（オリジナルストーリー） ==========
+    const episodes = [
+      {
+        id: 1,
+        title: "血染めの祠",
+        subtitle: "八人の怨霊が蘇る夜",
+        location: "岡山県・霧深村",
+        premium: false,
+        intro: "山奥の寒村「霧深村」で、旧家・朱鷺田家の当主が惨殺された。村には四百年前、落武者八人を皆殺しにした血塗られた歴史がある。「祟りじゃ...八人の怨霊が蘇ったのじゃ...」村人たちは恐怖に震える。そして二人目の犠牲者が出た夜、あなたは闇の中に人影を見た——それは、死んだはずの男だった。",
+        scenes: [
+          {
+            id: "main-house",
+            name: "朱鷺田家本邸",
+            description: "築二百年の古い屋敷。廊下を歩くたび、床が不気味に軋む。どこからか、すすり泣くような声が聞こえる。",
+            areas: [
+              { id: "tokonoma", name: "床の間", top: "20%", left: "15%", clueId: "scroll" },
+              { id: "fusuma", name: "血染めの襖", top: "35%", right: "15%", clueId: "blood-mark" },
+              { id: "irori", name: "囲炉裏", bottom: "35%", left: "40%", clueId: "ash" },
+              { id: "butsudan", name: "仏壇", top: "15%", right: "40%", message: "八人の落武者を弔う位牌。最近、一つだけ位置がずれている。誰かが触った？" }
+            ]
+          },
+          {
+            id: "storehouse",
+            name: "土蔵",
+            description: "代々の家宝が眠る土蔵。扉を開けた瞬間、腐臭が鼻をついた。",
+            areas: [
+              { id: "chest", name: "古い長持", top: "25%", left: "20%", clueId: "diary" },
+              { id: "katana", name: "刀架", top: "40%", right: "20%", clueId: "missing-sword" },
+              { id: "door", name: "土蔵の扉", bottom: "25%", left: "45%", clueId: "lock-inside" },
+              { id: "window", name: "小窓", top: "15%", left: "50%", message: "人が通れないほど小さい。しかし窓枠に新しい擦り傷がある。" }
+            ]
+          },
+          {
+            id: "shrine",
+            name: "八人塚",
+            description: "四百年前に殺された八人の落武者を祀る塚。今夜、塚から青白い炎が立ち上がるのを複数の村人が目撃している。",
+            areas: [
+              { id: "grave", name: "塚", top: "30%", left: "40%", clueId: "disturbed-soil" },
+              { id: "tree", name: "御神木", top: "20%", right: "25%", clueId: "carved-mark" },
+              { id: "path", name: "獣道", bottom: "30%", left: "20%", clueId: "footprint" },
+              { id: "offering", name: "供物台", bottom: "25%", right: "35%", message: "真新しい供物——まだ湯気が立っている。誰かがついさっきここにいた。" }
+            ]
+          }
+        ],
+        clues: [
+          { id: "scroll", name: "血の契約書", description: "「八人の血を継ぐ者、災いを招く」と記された四百年前の文書。朱鷺田家の先祖が落武者を殺し、その財宝を奪った記録だった。" },
+          { id: "blood-mark", name: "血の手形", description: "襖に残された血の手形。しかし被害者の手よりも明らかに小さい。女性、あるいは——子供のもの？" },
+          { id: "ash", name: "囲炉裏の灰", description: "囲炉裏の灰の中から、燃え残った紙片を発見。「遺言状」「真の相続人は」という文字が辛うじて読み取れる。" },
+          { id: "diary", name: "当主の日記", description: "「あの子だけには真実を伝えねばならぬ。家督を譲る決意を固めたことを」——最後のページは破り取られていた。" },
+          { id: "missing-sword", name: "消えた脇差", description: "刀架から脇差が一本消えている。鞘だけが残され、刀身には被害者の血が付着しているはずだ。" },
+          { id: "lock-inside", name: "内側からの施錠", description: "土蔵の扉は内側から閂がかけられていた。完全な密室——しかし被害者は確かに中で死んでいた。" },
+          { id: "disturbed-soil", name: "掘り返された土", description: "塚の土が最近掘り返された形跡。土の中から、四百年前のものではない——真新しい骨が見えている。" },
+          { id: "carved-mark", name: "刻まれた印", description: "御神木に新しく刻まれた「×」の印。村の古老によれば、これは「次の標的」を示す呪いの印だという。" },
+          { id: "footprint", name: "足跡", description: "獣道に残された草履の跡。しかし歩幅が異様に広い。まるで何かを引きずりながら、急いで歩いたような——" }
+        ],
+        finalQuestion: "霧深村の惨劇。真犯人は誰か、そしてその動機は何か。",
+        choices: [
+          "当主の弟・辰夫（莫大な遺産を独り占めするため）",
+          "村の巫女・お鶴（落武者の末裔として四百年の復讐を果たすため）",
+          "当主の養子・健一（遺産分配を阻止し全財産を独占するため）",
+          "村長・源三郎（村の暗い歴史を永遠に葬り去るため）"
+        ],
+        correctAnswer: 2,
+        solution: "犯人は当主の養子・健一です。\n\n【真相】\n健一は幼い頃に養子として引き取られ、当主に実の子のように育てられました。しかし当主は最近、遺言状で財産を弟の辰夫にも分配する決意を固めていました。健一はこれを知り、全財産を独占するために当主を殺害したのです。\n\n密室トリックの種明かし：土蔵の小窓から細い紐を通し、閂に結んで外から施錠。擦り傷はその時についたもの。\n\n血の手形の正体：健一の恋人——彼女は共犯者として現場にいました。彼女の小さな手が、血の手形となって残されたのです。\n\n掘り返された塚：そこには新しい遺言状が埋められていました。「祟り」という村の因習を利用し、自らの犯行を覆い隠そうとした——それが健一の計画でした。"
+      },
+      {
+        id: 2,
+        title: "湖底の遺言",
+        subtitle: "沈黙の湖が語る秘密",
+        location: "信州・深霧湖畔",
+        premium: false,
+        intro: "信州の豪商・神崎家の当主が遺した奇妙な遺言状。「湖底に沈めた秘密を最初に見つけた者に全財産を与える」——やがて湖畔の屋敷で、相続候補の一人が溺死体で発見された。月明かりの湖面に浮かぶ顔、握りしめられた泥だらけの手。この不可解な殺人の真相とは。",
+        scenes: [
+          {
+            id: "mansion",
+            name: "神崎家本邸",
+            description: "湖を見下ろす高台に建つ洋館。夜になると、どこからか女のすすり泣きが聞こえるという。",
+            areas: [
+              { id: "safe", name: "金庫室", top: "20%", left: "20%", clueId: "will" },
+              { id: "portrait", name: "肖像画", top: "25%", right: "15%", clueId: "portrait-secret" },
+              { id: "phone", name: "電話室", bottom: "30%", left: "15%", clueId: "call-record" },
+              { id: "window", name: "窓", top: "15%", left: "50%", message: "窓から湖が一望できる。事件当夜、湖面に青白い人影が立っているのを使用人が見たという。" }
+            ]
+          },
+          {
+            id: "lake",
+            name: "深霧湖畔",
+            description: "死体が発見された湖畔。葦が生い茂り、霧が立ち込める。水の底には何かが沈んでいる。",
+            areas: [
+              { id: "dock", name: "桟橋", top: "30%", left: "35%", clueId: "boat-rope" },
+              { id: "reeds", name: "葦原", top: "40%", right: "20%", clueId: "torn-cloth" },
+              { id: "footprints", name: "足跡", bottom: "35%", left: "25%", clueId: "two-prints" },
+              { id: "water", name: "水面", top: "20%", right: "40%", message: "澄んだ水。しかし霧の夜には、溺死した女の顔が浮かぶという伝説がある。" }
+            ]
+          },
+          {
+            id: "annex",
+            name: "離れ",
+            description: "相続候補たちが滞在していた建物。事件当夜、全員が自室にいたと主張している。しかし——",
+            areas: [
+              { id: "room1", name: "長男・清司の部屋", top: "25%", left: "15%", clueId: "diving-gear" },
+              { id: "room2", name: "次男・武彦の部屋", top: "35%", right: "20%", clueId: "debt-note" },
+              { id: "room3", name: "三男・智也の部屋", bottom: "30%", left: "40%", clueId: "letter" },
+              { id: "hallway", name: "廊下", bottom: "25%", right: "30%", message: "深夜二時、誰かが廊下を歩く足音を使用人が聞いている。そして、水の滴る音も。" }
+            ]
+          }
+        ],
+        clues: [
+          { id: "will", name: "遺言状", description: "「湖底の金庫を開けた者に全遺産を相続させる。暗証番号は私と共に沈んだ」——当主は何を隠したかったのか。" },
+          { id: "portrait-secret", name: "肖像画の裏", description: "先代当主の肖像画の裏に、隠し部屋への扉を発見。中には古い日記と、見知らぬ女性の写真が。" },
+          { id: "call-record", name: "通話記録", description: "事件当夜、東京への長距離電話。相手は探偵事務所——誰かの身辺調査を依頼していた。" },
+          { id: "boat-rope", name: "舟の綱", description: "桟橋の綱が新しく結び直されている。結び方は船乗りのものではない——医者が使う外科結びだ。" },
+          { id: "torn-cloth", name: "破れた布", description: "葦原に引っかかっていた高級な着物の切れ端。裏には「神崎」の家紋が刺繍されていた。" },
+          { id: "two-prints", name: "二人分の足跡", description: "湖畔に残る二人分の足跡。行きは二人、帰りは一人。そして、何かを引きずった跡。" },
+          { id: "diving-gear", name: "潜水道具", description: "清司の部屋から発見された潜水用具。最近使用された形跡があり、泥がついている。" },
+          { id: "debt-note", name: "借用書", description: "武彦が闇金融から借りた多額の借金。期限は明後日——払えなければ命はない。" },
+          { id: "letter", name: "脅迫状", description: "智也宛の脅迫状。「お前の秘密を知っている。黙っていてほしければ金を用意しろ」——差出人不明。" }
+        ],
+        finalQuestion: "湖畔の溺死体。この不可解な殺人の犯人は誰か。",
+        choices: [
+          "武彦（借金返済のため遺産を狙った）",
+          "智也（脅迫者を排除するため）",
+          "清司（湖底の秘密を独占するため）",
+          "屋敷の執事・田村（主人への復讐）"
+        ],
+        correctAnswer: 2,
+        solution: "真犯人は長男・清司です。\n\n【真相】\n清司は密かに潜水の訓練を受けており、湖底に沈められた金庫の場所を既に特定していました。被害者はそれに気づき、清司を脅迫しようとしたため殺害されました。\n\n事件の夜、清司は被害者を「湖底の秘密を教える」と言って湖畔に誘い出し、舟に乗せました。湖の中央で被害者を水中に突き落とし、溺死させたのです。\n\n二人分の足跡は、被害者を湖畔に連れ出した証拠。帰りが一人なのは犯人が舟で別の場所から戻ったから。外科結びの綱——清司は元々医学生で、その知識を使いました。\n\n潜水道具の泥は、犯行後に証拠を湖底に沈めた際についたものでした。"
+      },
+      {
+        id: 3,
+        title: "鬼哭島",
+        subtitle: "灯台守の最期の告白",
+        location: "瀬戸内海・鬼哭島",
+        premium: false,
+        intro: "瀬戸内海に浮かぶ孤島・鬼哭島。古い灯台守の男が「この島には呪われた宝が眠っている」と遺言を残して死んだ。彼の言葉を聞きつけ、宝を求めて島に上陸した五人の男女。しかし一人、また一人と不可解な死を遂げていく。「島から出る船は三日後まで来ない」——閉ざされた孤島で、生き残るのは誰か。",
+        scenes: [
+          {
+            id: "lighthouse",
+            name: "灯台",
+            description: "島の最高地点に立つ古い灯台。夜な夜な、誰もいないはずの灯台から光が点滅するという。",
+            areas: [
+              { id: "top", name: "灯室", top: "20%", left: "30%", clueId: "light-signal" },
+              { id: "room", name: "灯台守の部屋", top: "35%", right: "20%", clueId: "first-victim" },
+              { id: "storage", name: "倉庫", bottom: "30%", left: "20%", clueId: "old-map" },
+              { id: "stairs", name: "螺旋階段", bottom: "25%", right: "30%", message: "百段以上ある螺旋階段。途中、一段だけ新しく補修されている。" }
+            ]
+          },
+          {
+            id: "village",
+            name: "廃村",
+            description: "かつて漁師たちが暮らしていた集落。今は廃墟と化し、朽ちた家々が並ぶ。",
+            areas: [
+              { id: "well", name: "古井戸", top: "25%", left: "15%", clueId: "hidden-passage" },
+              { id: "shrine", name: "朽ちた社", top: "40%", right: "25%", clueId: "second-victim" },
+              { id: "dock", name: "船着場", bottom: "35%", left: "40%", clueId: "sabotaged-boat" },
+              { id: "cellar", name: "地下室", top: "15%", right: "15%", message: "廃屋の地下から、金属を引っ掻くような音が聞こえる。" }
+            ]
+          },
+          {
+            id: "cave",
+            name: "海蝕洞",
+            description: "島の断崖にある洞窟。満潮時には完全に水没する危険な場所。",
+            areas: [
+              { id: "entrance", name: "洞窟入口", top: "30%", left: "20%", clueId: "tide-table" },
+              { id: "deep", name: "洞窟奥", top: "35%", right: "15%", clueId: "treasure-chest" },
+              { id: "pool", name: "潮溜まり", bottom: "30%", left: "35%", clueId: "third-victim" },
+              { id: "crack", name: "岩の裂け目", bottom: "25%", right: "25%", clueId: "escape-route" }
+            ]
+          }
+        ],
+        clues: [
+          { id: "light-signal", name: "灯台の信号", description: "灯台から発せられていた光は、モールス信号だった。解読すると「タカラハワナ（宝は罠）」。" },
+          { id: "first-victim", name: "最初の被害者", description: "灯台守の部屋で発見された男。彼の手には古い地図の切れ端が握られていた。" },
+          { id: "old-map", name: "古い地図", description: "島の詳細な地図。しかし「X」印の場所は三箇所ある——どれが本物の宝の在処か？" },
+          { id: "hidden-passage", name: "隠し通路", description: "井戸の壁に隠された通路。灯台まで繋がっているが、途中に落とし穴がある。" },
+          { id: "second-victim", name: "二人目の被害者", description: "社の中で発見された女。首には絞められた跡と、奇妙な刺青のような模様。" },
+          { id: "sabotaged-boat", name: "破壊された船", description: "島を離れる唯一の手段だった船が、何者かに穴を開けられていた。" },
+          { id: "tide-table", name: "潮汐表", description: "灯台守が残した潮汐表。今夜の満潮は午前三時——洞窟は完全に水没する。" },
+          { id: "treasure-chest", name: "宝箱", description: "洞窟の奥で発見された古い箱。しかし中には金銀財宝ではなく、複数の人骨が詰められていた。" },
+          { id: "third-victim", name: "三人目の被害者", description: "潮溜まりに浮かぶ男の遺体。溺死——しかし、海水ではなく真水が肺に入っていた。" },
+          { id: "escape-route", name: "脱出路", description: "岩の裂け目から島の反対側に出られる。誰かが最近通った形跡がある。" }
+        ],
+        finalQuestion: "孤島連続殺人の真犯人。宝に隠された恐るべき真相とは。",
+        choices: [
+          "生き残った男・山岡（宝を独占するため仲間を排除）",
+          "生き残った女・美咲（実は灯台守の娘で復讐を実行）",
+          "死んだと思われていた灯台守（全ては偽装死だった）",
+          "島に住む謎の老婆（島を守るための殺人）"
+        ],
+        correctAnswer: 1,
+        solution: "犯人は生き残った女・美咲です。\n\n【真相】\n美咲は十年前、この島で行方不明になった探検家の娘でした。父は「宝探し」に取り憑かれた仲間たちに裏切られ、洞窟に置き去りにされて溺死したのです。宝箱の中の人骨は、過去に同じ運命を辿った者たちのものでした。\n\n美咲は復讐のため、偽の宝の情報を流して父を殺した者たちの子供や関係者をこの島に誘い出しました。灯台守は美咲の協力者——彼もまた、過去の事件の被害者遺族だったのです。\n\n「宝は罠」という信号は、灯台守の最後の良心。三人目の被害者が海水ではなく真水で溺死していたのは、井戸の隠し通路で殺されたから。美咲は島の全てを知り尽くしていました。"
+      },
+      {
+        id: 4,
+        title: "雪密室",
+        subtitle: "琴の音と白銀の殺意",
+        location: "岡山県・旧街道筋",
+        premium: false,
+        intro: "旧家・一条家の婚礼の夜、新郎新婦が惨殺された。離れ座敷は四方を深い雪に囲まれた完全な密室。足跡は一切ない。しかも死の直前、どこからともなく琴の音が響いたという。凍てつく夜、江戸時代から続く屋敷で何が起こったのか。",
+        scenes: [
+          {
+            id: "hanare",
+            name: "離れ座敷",
+            description: "事件現場。血に染まった白無垢が、雪明かりに浮かび上がる。",
+            areas: [
+              { id: "futon", name: "布団", top: "30%", left: "35%", clueId: "wound" },
+              { id: "koto", name: "琴", top: "20%", right: "20%", clueId: "koto-string" },
+              { id: "window", name: "雪見障子", bottom: "30%", left: "20%", clueId: "snow" },
+              { id: "tokonoma", name: "床の間", top: "15%", left: "15%", clueId: "katana" }
+            ]
+          },
+          {
+            id: "main-house",
+            name: "母屋",
+            description: "婚礼の宴が行われていた本邸。祝いの席が、一転して通夜となった。",
+            areas: [
+              { id: "hall", name: "大広間", top: "25%", left: "25%", clueId: "guest-list" },
+              { id: "kitchen", name: "台所", top: "40%", right: "15%", clueId: "knife" },
+              { id: "corridor", name: "渡り廊下", bottom: "35%", left: "40%", clueId: "wet-mark" },
+              { id: "storage", name: "物置", bottom: "25%", right: "25%", message: "埃をかぶった古い竹馬を発見。子供用ではなく、大人が使うサイズだ。" }
+            ]
+          },
+          {
+            id: "garden",
+            name: "雪の庭",
+            description: "一面の銀世界。しかし足跡は一つもない——まるで幽霊の仕業のように。",
+            areas: [
+              { id: "path", name: "飛び石", top: "30%", left: "20%", clueId: "no-footprint" },
+              { id: "tree", name: "松の木", top: "25%", right: "30%", clueId: "branch" },
+              { id: "wall", name: "塀", bottom: "30%", left: "45%", message: "高い塀で囲まれている。乗り越えた形跡はないが、塀の上に細い傷がある。" },
+              { id: "pond", name: "池", bottom: "25%", right: "20%", clueId: "frozen" }
+            ]
+          }
+        ],
+        clues: [
+          { id: "wound", name: "傷の状態", description: "二人とも日本刀による斬殺。一太刀で絶命させる腕前——剣道の達人、それも据え物斬りの訓練を受けた者。" },
+          { id: "koto-string", name: "琴の弦", description: "琴の弦が一本だけ切れている。しかし演奏中に切れたにしては、切り口が鋭すぎる。何かに使われた？" },
+          { id: "snow", name: "雪の状態", description: "障子の外は三十センチの新雪。事件発生時刻以降も雪は降り続いた——つまり、それ以前の足跡は消えている。" },
+          { id: "katana", name: "床の間の刀", description: "飾り刀が鞘から抜かれ、刃に血がべったり。しかし一条家の家宝であり、家人以外は存在すら知らないはずだ。" },
+          { id: "guest-list", name: "出席者名簿", description: "婚礼の出席者全員に鉄壁のアリバイ。全員が大広間で宴会中、誰一人として席を外していない。" },
+          { id: "knife", name: "研がれた包丁", description: "台所の包丁が異様なほど鋭く研がれている。料理人に聞くと「若旦那が自分で研いだ」と。" },
+          { id: "wet-mark", name: "濡れた跡", description: "渡り廊下に点々と水滴の跡。雪が溶けたものだが、足跡の形ではない——何か長いものを引きずったような。" },
+          { id: "no-footprint", name: "足跡なし", description: "飛び石にも庭にも、足跡は一切ない。しかし飛び石の上だけ、雪が不自然に少ない。" },
+          { id: "branch", name: "折れた枝", description: "松の太い枝が折れている。折れ口は新しく、人の体重がかかったような折れ方だ。" },
+          { id: "frozen", name: "凍った池", description: "池は完全に凍結。表面に薄い傷——スケートの刃のような跡がある。" }
+        ],
+        finalQuestion: "雪の密室殺人。犯人はいかにして足跡を残さず犯行に及んだのか。",
+        choices: [
+          "母屋の屋根から渡り廊下を伝い、空中を移動した",
+          "事件前から離れの天井裏に潜んでいた",
+          "凍った池をスケートで渡り、雪が降る前に戻った",
+          "竹馬で飛び石の上だけを踏んで往復した"
+        ],
+        correctAnswer: 3,
+        solution: "犯人は「竹馬」を使いました。\n\n【真相】\n犯人は大人用の竹馬を使い、飛び石の上だけを踏んで離れに向かいました。竹馬の先端は細く、飛び石の上に残る跡は雪が溶けただけに見える。\n\n松の枝が折れていたのは、バランスを崩した際に掴んだため。渡り廊下の水滴は、竹馬についた雪が溶けて滴り落ちたもの。\n\n琴の音の正体——犯人が張っておいた弦のトラップ。逃げる際に触れて鳴ったのです。帰りも同じ方法で飛び石を踏んで戻り、その後降った雪が全ての痕跡を消しました。\n\n犯人は新婦の元婚約者。彼女を奪われた恨みと、一条家への復讐。剣道三段の腕前が、一太刀で二人の命を奪いました。"
+      },
+      {
+        id: 5,
+        title: "時計塔の処刑人",
+        subtitle: "十二の鐘が告げる死",
+        location: "長野県・霧ヶ峰高原",
+        premium: false,
+        intro: "高原に建つ古い時計塔で、連続殺人が発生。被害者は全員、時計塔の鐘が鳴る瞬間に殺されている——九時、十時、十一時。次の正午の鐘が鳴るとき、四人目の犠牲者が出るのか。「時計塔には悪魔が棲んでいる」と村人たちは噂する。",
+        scenes: [
+          {
+            id: "tower",
+            name: "時計塔",
+            description: "百年以上前に建てられた石造りの時計塔。内部には複雑な歯車機構が今も動き続けている。",
+            areas: [
+              { id: "clock", name: "時計機構室", top: "25%", left: "30%", clueId: "gear-trap" },
+              { id: "bell", name: "鐘楼", top: "40%", right: "20%", clueId: "first-victim" },
+              { id: "stairs", name: "螺旋階段", bottom: "30%", left: "20%", clueId: "footprints" },
+              { id: "base", name: "塔の基部", bottom: "25%", right: "30%", message: "古い落書き。「1923年、約束を守れ」と刻まれている。" }
+            ]
+          },
+          {
+            id: "mansion",
+            name: "館主の屋敷",
+            description: "時計塔を建てた一族の末裔が暮らす屋敷。被害者たちは全員、ここに招かれていた。",
+            areas: [
+              { id: "study", name: "書斎", top: "30%", left: "25%", clueId: "old-contract" },
+              { id: "portrait", name: "肖像画の間", top: "35%", right: "20%", clueId: "second-victim" },
+              { id: "cellar", name: "地下室", bottom: "35%", left: "40%", clueId: "hidden-room" },
+              { id: "garden", name: "庭園", bottom: "25%", right: "25%", message: "庭に並ぶ十二体の彫像。しかし今は九体しかない。" }
+            ]
+          },
+          {
+            id: "village",
+            name: "村の教会",
+            description: "時計塔より古い小さな教会。ここにも過去の秘密が眠っている。",
+            areas: [
+              { id: "altar", name: "祭壇", top: "25%", left: "15%", clueId: "old-diary" },
+              { id: "confessional", name: "告解室", top: "40%", right: "25%", clueId: "third-victim" },
+              { id: "records", name: "教区記録", bottom: "30%", left: "35%", clueId: "birth-record" },
+              { id: "cemetery", name: "墓地", bottom: "25%", right: "20%", clueId: "unmarked-grave" }
+            ]
+          }
+        ],
+        clues: [
+          { id: "gear-trap", name: "歯車の罠", description: "時計機構に仕掛けられた罠。特定の時刻になると、隠された刃が飛び出す仕組みになっていた。" },
+          { id: "first-victim", name: "最初の被害者", description: "鐘楼で発見された男。九時の鐘と共に、歯車に巻き込まれて死亡。偶然の事故に見せかけられていた。" },
+          { id: "footprints", name: "螺旋階段の足跡", description: "被害者以外の足跡が二種類。一つは小さく、もう一つは引きずるような歩き方。" },
+          { id: "old-contract", name: "古い契約書", description: "1923年の契約書。「時計塔の秘密を守る見返りに、土地の権利を譲渡する」——署名は四人の名前。" },
+          { id: "second-victim", name: "二人目の被害者", description: "肖像画の前で発見された女。十時の鐘と共に、絵画の裏から飛び出した刃で刺殺。" },
+          { id: "hidden-room", name: "隠し部屋", description: "地下室の奥に隠された部屋。中には大量の金塊——そして、古い遺体が。" },
+          { id: "old-diary", name: "神父の日記", description: "1923年の神父の日記。「彼らは罪を犯した。しかし私は告解の秘密を守らねばならない」。" },
+          { id: "third-victim", name: "三人目の被害者", description: "告解室で発見された男。十一時の鐘と共に毒殺。握りしめた紙には「許してくれ」の文字。" },
+          { id: "birth-record", name: "出生記録", description: "館主には双子の兄弟がいた。しかし片方は「死産」として届けられている。" },
+          { id: "unmarked-grave", name: "名もなき墓", description: "墓地の片隅にある、名前のない古い墓。掘り返された形跡がある。" }
+        ],
+        finalQuestion: "時計塔連続殺人の犯人。百年の時を超えた復讐の真相とは。",
+        choices: [
+          "館主（一族の秘密を守るため）",
+          "館主の妻（遺産目当ての犯行）",
+          "村の老人（1923年の被害者の息子）",
+          "館主の双子の弟（存在を消された復讐）"
+        ],
+        correctAnswer: 3,
+        solution: "犯人は館主の双子の弟でした。\n\n【真相】\n1923年、時計塔の建設中に金鉱が発見されました。当時の関係者四人は金を独占するため、発見者を殺害して隠し部屋に埋め、その秘密を契約書で封印しました。\n\n館主の双子の弟は「死産」として届けられましたが、実は生きていました。彼は顔に火傷を負い、一族の恥として地下室に幽閉されていたのです。彼こそが1923年の被害者の孫であり、祖父の復讐と自らの解放のために犯行に及びました。\n\n時計機構の罠は、幽閉生活の中で習得した機械技術で作られたもの。三人の被害者は、1923年の契約者の子孫たち。正午の鐘——最後の標的は館主本人でした。\n\n「時計塔の悪魔」の正体は、闇に葬られた双子の弟だったのです。"
+      },
+      {
+        id: 6,
+        title: "歩く能面",
+        subtitle: "夜を彷徨う般若の狂気",
+        location: "京都・西陣",
+        premium: false,
+        intro: "京都の織物商・八雲家で、能舞台を模した座敷から当主の遺体が発見された。死の直前、彼は能面をつけて舞っていたという。そして今、顔には般若の面が貼りついたまま——二度と剥がれない。「夜になると面が歩く」不気味な噂と、呪われた能面の謎を解け。",
+        scenes: [
+          {
+            id: "stage",
+            name: "能舞台の間",
+            description: "屋敷内に作られた本格的な能舞台。血が板の隙間に染み込んでいる。",
+            areas: [
+              { id: "body", name: "遺体発見場所", top: "30%", left: "40%", clueId: "mask-stuck" },
+              { id: "mirror", name: "鏡板", top: "20%", right: "20%", clueId: "scratch" },
+              { id: "hashigakari", name: "橋掛かり", bottom: "30%", left: "20%", clueId: "footstep" },
+              { id: "prop", name: "小道具", bottom: "25%", right: "30%", clueId: "fan" }
+            ]
+          },
+          {
+            id: "storage",
+            name: "能面蔵",
+            description: "代々伝わる能面を収蔵する蔵。どの面も、生きているように見える。",
+            areas: [
+              { id: "hannya", name: "般若の面", top: "25%", left: "25%", clueId: "poison-mask" },
+              { id: "collection", name: "面の棚", top: "35%", right: "15%", clueId: "missing-face" },
+              { id: "record", name: "台帳", bottom: "30%", left: "35%", clueId: "lending-record" },
+              { id: "box", name: "桐箱", bottom: "25%", right: "25%", message: "面を保管する桐箱。一つだけ、内側に爪で引っ掻いた跡がある。" }
+            ]
+          },
+          {
+            id: "living",
+            name: "居間",
+            description: "家族が集まる居間。遺産相続の話し合いが行われていた場所。",
+            areas: [
+              { id: "scroll", name: "掛け軸", top: "20%", left: "15%", clueId: "family-tree" },
+              { id: "desk", name: "文机", top: "40%", right: "20%", clueId: "will" },
+              { id: "tea", name: "茶器", bottom: "35%", left: "40%", clueId: "tea-cup" },
+              { id: "phone", name: "電話", bottom: "25%", right: "15%", clueId: "call" }
+            ]
+          }
+        ],
+        clues: [
+          { id: "mask-stuck", name: "貼りついた面", description: "般若の面が顔に貼りつき、どんな力でも剥がせない。接着剤——いや、皮膚と一体化したような恐ろしい状態。" },
+          { id: "scratch", name: "鏡板の傷", description: "能舞台の鏡板に新しい傷。何かが激しくぶつかったような跡。当主は死の間際、暴れたのか？" },
+          { id: "footstep", name: "橋掛かりの足跡", description: "能舞台への通路に、当主以外の足跡。しかし不思議なことに、行きの足跡しかない。" },
+          { id: "fan", name: "扇", description: "当主が持っていた扇から、微量の毒物が検出された。触れるだけで皮膚から浸透する種類。" },
+          { id: "poison-mask", name: "毒の面", description: "般若の面の内側に毒が塗られていた。皮膚から吸収される遅効性の毒——そして、皮膚を溶かして癒着させる成分。" },
+          { id: "missing-face", name: "消えた面", description: "台帳には記録があるが、実物がない面がある。「若女」の面——若い女性を象った、美しい面。" },
+          { id: "lending-record", name: "貸出記録", description: "事件の一週間前、当主が「若女」の面を持ち出している。誰に渡したのか。" },
+          { id: "family-tree", name: "家系図", description: "八雲家の家系図。当主には三人の子がいるが、一人は養子——しかも、戸籍上は「死亡」扱いになっている者が生きている。" },
+          { id: "will", name: "遺言状草稿", description: "「養子には一切相続させない。真実を知った今、彼を家族とは認められない」という衝撃的な内容。" },
+          { id: "tea-cup", name: "湯呑み", description: "当主の湯呑みから睡眠薬の成分が検出。能舞台に向かう前、彼は眠らされていた。" },
+          { id: "call", name: "不審な電話", description: "事件当夜、当主宛に謎の電話。「面を被れ、さもなくば真実を世間に公表する」と脅迫されていた。" }
+        ],
+        finalQuestion: "能面殺人の犯人。「夜歩く面」の正体とは何か。",
+        choices: [
+          "長男（正統な跡継ぎの座を守るため）",
+          "養子（相続から外されることへの復讐）",
+          "当主の愛人（捨てられた恨み）",
+          "能面師（傑作を奪われた怒り）"
+        ],
+        correctAnswer: 1,
+        solution: "犯人は養子でした。\n\n【真相】\n養子は偶然、遺言状の草稿を目にし、相続から外されることを知りました。そして自分が「戸籍上死亡した人間」——つまり、存在を抹消された者であることも。\n\n計画は周到でした。まず当主の茶に睡眠薬を混入。意識が朦朧とした当主を能舞台に誘い出し、毒を塗った般若の面を被せました。\n\n面の接着剤は、当主が苦しんでも面を外せないようにするため。毒が回るまでの間、当主は般若の面のまま舞台を彷徨いました——これが「夜歩く面」の正体。\n\n消えた「若女」の面は、養子が自分の顔を隠して当主に近づくためのカモフラージュに使用。行きの足跡しかないのは、帰りは「若女」の面を被ったまま、家人として堂々と歩いて戻ったからです。"
+      },
+      {
+        id: 7,
+        title: "人形館の惨劇",
+        subtitle: "硝子の瞳が見つめる殺意",
+        location: "神奈川県・箱根",
+        premium: false,
+        intro: "箱根の山中に建つ洋館「人形館」。世界中から集められた数百体の人形が、来訪者を無言で見つめている。館主が密室で殺された夜、人形たちの配置が変わっていた。「人形が動いた」と怯える使用人たち。果たして人形に宿る魂が犯人なのか、それとも——",
+        scenes: [
+          {
+            id: "mansion",
+            name: "人形展示室",
+            description: "数百体の人形が並ぶ大広間。硝子の瞳が一斉にこちらを見つめている。",
+            areas: [
+              { id: "display", name: "中央展示台", top: "25%", left: "25%", clueId: "moved-doll" },
+              { id: "corner", name: "フランス人形", top: "35%", right: "20%", clueId: "hidden-mechanism" },
+              { id: "cabinet", name: "陳列棚", bottom: "30%", left: "40%", clueId: "missing-doll" },
+              { id: "window", name: "窓際", bottom: "25%", right: "25%", clueId: "fingerprint" }
+            ]
+          },
+          {
+            id: "workshop",
+            name: "人形工房",
+            description: "館主が人形を修復していた工房。道具と材料が散乱している。",
+            areas: [
+              { id: "table", name: "作業台", top: "30%", left: "20%", clueId: "repair-log" },
+              { id: "tools", name: "道具箱", top: "40%", right: "25%", clueId: "sharp-tool" },
+              { id: "shelf", name: "材料棚", bottom: "35%", left: "35%", clueId: "special-glass" },
+              { id: "safe", name: "金庫", bottom: "25%", right: "20%", clueId: "secret-document" }
+            ]
+          },
+          {
+            id: "bedroom",
+            name: "館主の寝室",
+            description: "事件現場。密室状態で館主は殺害されていた。",
+            areas: [
+              { id: "bed", name: "ベッド", top: "25%", left: "15%", clueId: "death-state" },
+              { id: "desk", name: "書斎机", top: "40%", right: "20%", clueId: "diary" },
+              { id: "closet", name: "クローゼット", bottom: "30%", left: "40%", clueId: "hidden-space" },
+              { id: "door", name: "扉", bottom: "25%", right: "30%", message: "内側から鍵がかかっていた。窓も全て施錠されている。完全な密室だ。" }
+            ]
+          }
+        ],
+        clues: [
+          { id: "moved-doll", name: "動いた人形", description: "中央の人形が、昨夜とは違う方向を向いている。しかし誰も触っていないという。" },
+          { id: "hidden-mechanism", name: "隠された機構", description: "フランス人形の内部に、精巧な機械仕掛けを発見。時限式で動く仕組みだ。" },
+          { id: "missing-doll", name: "消えた人形", description: "陳列棚から一体の人形が消えている。館主が最も愛していた「マリア」という人形だ。" },
+          { id: "fingerprint", name: "窓の指紋", description: "窓の内側に、館主のものではない指紋。しかし外側には何の痕跡もない。" },
+          { id: "repair-log", name: "修復記録", description: "最近修復された人形のリスト。「マリア」の項目だけが破り取られている。" },
+          { id: "sharp-tool", name: "鋭利な道具", description: "人形修復用の細いメスに、拭き取られた血の痕跡。" },
+          { id: "special-glass", name: "特殊な硝子", description: "人形の目に使う特殊な硝子。光の角度で色が変わる——監視カメラのレンズと同じ素材だ。" },
+          { id: "secret-document", name: "秘密の書類", description: "金庫から発見された遺言状。「全財産を人形の保存に使い、甥には一銭も渡さない」。" },
+          { id: "death-state", name: "死亡状況", description: "館主は首を絞められて死亡。しかし抵抗した形跡がない。眠っている間に襲われた？" },
+          { id: "diary", name: "日記", description: "「最近、誰かに見られている気がする。人形たちの視線が、以前とは違う」——最後の日記。" },
+          { id: "hidden-space", name: "クローゼットの奥", description: "クローゼットの奥に、人一人が隠れられるスペース。そして、人形の衣装が一着。" }
+        ],
+        finalQuestion: "人形館密室殺人の真相。犯人はいかにして密室を作ったのか。",
+        choices: [
+          "館主の甥（遺産目当てで犯行）",
+          "使用人（人形への執着から）",
+          "人形コレクター（希少な人形を盗むため）",
+          "館主自身（偽装殺人で姿を消す計画）"
+        ],
+        correctAnswer: 0,
+        solution: "真犯人は館主の甥でした。\n\n【真相】\n甥は遺言状で相続から外されることを知り、犯行を決意。彼は人形修復の技術を密かに学び、「マリア」の人形の中に隠れるという大胆なトリックを実行しました。\n\n犯行の夜、甥は人形に偽装して展示室に潜入。深夜、人形から抜け出してクローゼットに隠れ、館主が眠った後に殺害。その後、再び人形の中に戻り、翌朝まで待機したのです。\n\n「人形が動いた」のは、甥が中から出入りした際の痕跡。消えた「マリア」は、甥が自分の代わりに使った等身大人形を処分したから。密室は、犯人が最初から部屋の中にいたことで成立していました。\n\n窓の内側の指紋は、甥が以前館を訪れた際のもの。人形の硝子の目に仕込まれた監視装置で、館主の生活パターンを把握していたのです。"
+      },
+      {
+        id: 8,
+        title: "迷宮館",
+        subtitle: "出口なき殺意の回廊",
+        location: "軽井沢",
+        premium: true,
+        intro: "軽井沢の森の中に建つ奇怪な洋館「迷宮館」。廊下が複雑に入り組み、一度入ると二度と出られないという。この館で開かれた同窓会で、参加者が一人ずつ姿を消していく。「迷宮に迷い込んだ者は、永遠にさまよい続ける」——死んだはずの館主の声が、今夜も廊下に響く。",
+        scenes: [
+          {
+            id: "entrance",
+            name: "玄関ホール",
+            description: "巨大なシャンデリアが揺れる玄関。ここから迷宮が始まる。",
+            areas: [
+              { id: "chandelier", name: "シャンデリア", top: "15%", left: "45%", clueId: "candle-wax" },
+              { id: "guestbook", name: "芳名帳", top: "35%", right: "20%", clueId: "attendance" },
+              { id: "portrait", name: "館主の肖像", bottom: "30%", left: "25%", clueId: "hidden-switch" },
+              { id: "door", name: "正面扉", bottom: "25%", right: "35%", clueId: "locked-inside" }
+            ]
+          },
+          {
+            id: "maze",
+            name: "迷路廊下",
+            description: "どこまでも続く不気味な廊下。同じ景色が永遠に繰り返される——錯覚か、現実か。",
+            areas: [
+              { id: "mirror", name: "鏡", top: "25%", left: "20%", clueId: "one-way-mirror" },
+              { id: "door1", name: "扉A", top: "40%", right: "25%", clueId: "blood-stain" },
+              { id: "passage", name: "隠し通路", bottom: "35%", left: "40%", clueId: "secret-route" },
+              { id: "carpet", name: "絨毯", bottom: "25%", right: "20%", clueId: "drag-mark" }
+            ]
+          },
+          {
+            id: "library",
+            name: "図書室",
+            description: "迷路の中心にある図書室。館主の研究資料が眠る——そして、一人の死体が。",
+            areas: [
+              { id: "desk", name: "執務机", top: "30%", left: "25%", clueId: "will" },
+              { id: "map", name: "館の設計図", top: "35%", right: "15%", clueId: "blueprint" },
+              { id: "safe", name: "金庫", bottom: "30%", left: "35%", clueId: "inheritance" },
+              { id: "book", name: "古い日記", bottom: "25%", right: "25%", clueId: "diary" }
+            ]
+          }
+        ],
+        clues: [
+          { id: "candle-wax", name: "蝋の滴り", description: "シャンデリアから新しい蝋が滴っている。電気があるのに、なぜ蝋燭を？——停電を偽装するため。" },
+          { id: "attendance", name: "出席者", description: "同窓会出席者10名。しかし芳名帳には11人の名前が。余分な一人は——死んだはずの館主。" },
+          { id: "hidden-switch", name: "隠しスイッチ", description: "肖像画の目を押すと、壁全体が回転する。迷路は固定ではなく、操作で変えられる。" },
+          { id: "locked-inside", name: "内側からの施錠", description: "正面扉は内側から厳重に施錠。しかし「中から」施錠したはずの人物は、外で殺されている。" },
+          { id: "one-way-mirror", name: "マジックミラー", description: "廊下の鏡は一方通行のマジックミラー。裏側から全ての部屋を監視できる。" },
+          { id: "blood-stain", name: "血痕", description: "扉の取っ手に拭き取られた血痕。しかし、この部屋で殺人は起きていない。つまり——移動させた。" },
+          { id: "secret-route", name: "抜け道", description: "壁の一部が回転し、別の廊下に繋がる。迷宮は「迷わない者」には単なる通路。" },
+          { id: "drag-mark", name: "引きずり跡", description: "絨毯に何かを引きずった跡。隠し通路に向かっている——死体を運んだ痕跡。" },
+          { id: "will", name: "遺言状", description: "「迷宮から生きて出た者に全財産を譲る」という奇妙な遺言。これは遺産相続ではなく——サバイバルゲームの宣言。" },
+          { id: "blueprint", name: "設計図", description: "館の設計図。しかし実際の構造と異なる——隠し通路や可動壁は全く記載されていない。" },
+          { id: "inheritance", name: "相続証書", description: "金庫から発見された証書。相続人として、10人の参加者全員の名前が——つまり、全員殺せば誰も相続できない。" },
+          { id: "diary", name: "館主の日記", description: "「私を見捨てた10人に復讐する。死んでもなお、私は彼らを迷宮に閉じ込める」——狂気の遺言。" }
+        ],
+        finalQuestion: "迷宮館連続殺人。生き残った者の中に犯人がいる。",
+        choices: [
+          "幹事を務めた男（遺産を独り占めするため）",
+          "故・館主の隠し子（父の復讐を代行するため）",
+          "探偵役を買って出た男（完全犯罪への挑戦として）",
+          "最初に死んだとされる女（死を偽装して暗躍）"
+        ],
+        correctAnswer: 1,
+        solution: "犯人は故・館主の隠し子でした。\n\n【真相】\n同窓会は最初から復讐劇でした。10人の参加者は全員、かつて館主を裏切り、破滅させた者たち。\n\n犯人は館主の隠し子。父から迷宮の全ての秘密——隠し通路、可動壁、マジックミラーの位置——を受け継ぎ、一人ずつ処刑していきました。\n\n11人目の名前は犯人自身。彼は参加者の一人に成りすまし、同窓会に紛れ込んでいたのです。「迷宮から出た者が相続」という遺言は、誰も生きて出さないという犯人の宣言。\n\n迷わない者にとって、迷宮は狩り場に過ぎませんでした。"
+      },
+      {
+        id: 9,
+        title: "消えた村",
+        subtitle: "三十二人の白骨が語る真実",
+        location: "新潟県・深山",
+        premium: true,
+        intro: "豪雪地帯の山村・深雪村が、一夜にして消滅した。村人三十二名全員が行方不明。残されたのは雪に埋もれた廃屋だけ。三十年後、村の跡地から白骨が発見された。雪解けとともに明らかになる、村が隠していた恐ろしい秘密とは——",
+        scenes: [
+          {
+            id: "village-ruins",
+            name: "村の跡地",
+            description: "朽ちた家々が点在する。三十年前、ここで何が起きたのか。",
+            areas: [
+              { id: "well", name: "井戸", top: "25%", left: "20%", clueId: "bones-in-well" },
+              { id: "shrine", name: "神社跡", top: "35%", right: "25%", clueId: "hidden-cave" },
+              { id: "school", name: "分校跡", bottom: "30%", left: "35%", clueId: "class-photo" },
+              { id: "house", name: "村長の家跡", bottom: "25%", right: "20%", clueId: "buried-safe" }
+            ]
+          },
+          {
+            id: "cave",
+            name: "洞窟",
+            description: "神社の裏手から続く洞窟。かつて避難場所だったという——しかし、ここは墓場になった。",
+            areas: [
+              { id: "entrance", name: "入口", top: "30%", left: "25%", clueId: "blocked-entrance" },
+              { id: "bones", name: "白骨", top: "40%", right: "20%", clueId: "bone-analysis" },
+              { id: "tools", name: "道具類", bottom: "35%", left: "40%", clueId: "mining-tools" },
+              { id: "wall", name: "壁面", bottom: "25%", right: "30%", clueId: "scratches" }
+            ]
+          },
+          {
+            id: "archive",
+            name: "県立図書館",
+            description: "深雪村に関する資料を調査。しかし、奇妙なことに多くが「閲覧禁止」になっている。",
+            areas: [
+              { id: "newspaper", name: "当時の新聞", top: "25%", left: "15%", clueId: "missing-report" },
+              { id: "census", name: "戸籍謄本", top: "40%", right: "20%", clueId: "population" },
+              { id: "map", name: "古い地図", bottom: "30%", left: "35%", clueId: "mine-location" },
+              { id: "photo", name: "写真資料", bottom: "25%", right: "25%", clueId: "company-man" }
+            ]
+          }
+        ],
+        clues: [
+          { id: "bones-in-well", name: "井戸の白骨", description: "井戸から複数の白骨が発見された。分析の結果、女性と子供が大半——なぜ男が少ない？" },
+          { id: "hidden-cave", name: "隠された洞窟", description: "神社の御神体の裏に洞窟への入口があった。村人だけが知る秘密の避難場所。" },
+          { id: "class-photo", name: "集合写真", description: "分校最後の集合写真。子供たちの顔は暗く、教師の目は虚ろ。何かを知っていた。" },
+          { id: "buried-safe", name: "埋められた金庫", description: "村長宅跡から金庫発見。中には多額の現金と、某大企業との「契約書」——口止め料。" },
+          { id: "blocked-entrance", name: "塞がれた入口", description: "洞窟の入口は内側から岩で塞がれていた——しかし、内側から塞いだ者は、どうやって出た？" },
+          { id: "bone-analysis", name: "遺骨鑑定", description: "白骨の死因は窒息。空気がなくなった——しかし、洞窟は十分な広さがある。意図的にガスを？" },
+          { id: "mining-tools", name: "採掘道具", description: "洞窟内に採掘道具がある。村人は何かを掘っていた——そして、それが村を滅ぼした。" },
+          { id: "scratches", name: "壁の傷", description: "壁に爪で引っ掻いたような無数の傷。死に物狂いで脱出しようとした痕跡。最後の瞬間の恐怖が伝わってくる。" },
+          { id: "missing-report", name: "新聞記事", description: "村消滅の報道は一回だけ。以降、完全に報道されなくなった——圧力がかかった。" },
+          { id: "population", name: "戸籍記録", description: "村の人口は32名。しかし発見された遺骨は31体。一人だけ、生き残った者がいる。" },
+          { id: "mine-location", name: "鉱山の記載", description: "地図に「閉山」と記された鉱山がある。しかし閉山届は出されていない——秘密裏に操業していた。" },
+          { id: "company-man", name: "不審な人物", description: "村消滅直前、某大企業の幹部が村を訪れていた写真。背景に、村長と握手する姿。" }
+        ],
+        finalQuestion: "三十二人目の村人は誰か。そして村に何が起こったのか。",
+        choices: [
+          "村長が村人を洞窟に閉じ込めて殺害した（権力欲から）",
+          "大企業が村ごと消した（鉱毒被害の隠蔽のため）",
+          "村人同士の争いで全滅した（カルト化した村）",
+          "自然災害で洞窟に閉じ込められた（雪崩）"
+        ],
+        correctAnswer: 1,
+        solution: "真相は大企業による組織的な隠蔽でした。\n\n【真相】\n深雪村の地下では、某大企業が極秘に有毒物質を含む鉱石を採掘していました。やがて鉱毒が発生し、村人に健康被害が出始めます。\n\n企業は賠償問題や社会問題化を恐れ、村ごと「消す」ことを決定。村長を買収し、「緊急避難訓練」と称して村人を洞窟に誘導。その後、有毒ガスを流し込み、入口を塞いで全員を窒息死させました。\n\n32人目——生き残ったのは買収された村長本人。彼は事件後、別人として都会に逃亡し、企業から多額の口止め料を受け取っていました。\n\n三十年後、彼が老衰で死に、遺言により全てが明るみに。しかし、企業の責任者たちもすでに鬼籍に入っていました——正義は、永遠に果たされない。"
+      },
+      {
+        id: 10,
+        title: "黒猫亭殺人",
+        subtitle: "温泉宿に蘇る百年の怨霊",
+        location: "群馬県・山間温泉郷",
+        premium: true,
+        intro: "山奥の温泉旅館「黒猫亭」。百年前、番頭に殺された女将の亡霊が出るという。満室の宿で宿泊客が一人ずつ消えていく。黒猫の鳴き声とともに現れる白い着物の女...。怨霊か、人間の仕業か。湯煙の向こうに潜む殺意を暴け。",
+        scenes: [
+          {
+            id: "lobby",
+            name: "帳場",
+            description: "旅館の受付。古い木の匂いと、どこからか漂う血の臭い。",
+            areas: [
+              { id: "register", name: "宿帳", top: "25%", left: "20%", clueId: "guest-list" },
+              { id: "key-box", name: "鍵箱", top: "35%", right: "25%", clueId: "master-key" },
+              { id: "cat", name: "黒猫の像", bottom: "30%", left: "40%", clueId: "hidden-button" },
+              { id: "scroll", name: "由来書", bottom: "25%", right: "20%", clueId: "legend" }
+            ]
+          },
+          {
+            id: "bath",
+            name: "大浴場",
+            description: "源泉掛け流しの大浴場。湯煙で何も見えない——絶好の殺人現場。",
+            areas: [
+              { id: "bath-edge", name: "浴槽の縁", top: "30%", left: "35%", clueId: "blood-trace" },
+              { id: "changing", name: "脱衣所", top: "35%", right: "20%", clueId: "belongings" },
+              { id: "drain", name: "排水口", bottom: "35%", left: "25%", clueId: "hair" },
+              { id: "window", name: "窓", bottom: "25%", right: "30%", clueId: "wet-footprint" }
+            ]
+          },
+          {
+            id: "room",
+            name: "離れの客室",
+            description: "被害者が泊まっていた離れ。障子の向こうに、人影が立っている——ような気がする。",
+            areas: [
+              { id: "futon", name: "布団", top: "30%", left: "25%", clueId: "sleeping-drug" },
+              { id: "window2", name: "窓", top: "25%", right: "20%", clueId: "cat-hair" },
+              { id: "closet", name: "押し入れ", bottom: "30%", left: "35%", clueId: "white-kimono" },
+              { id: "phone", name: "内線電話", bottom: "25%", right: "25%", clueId: "last-call" }
+            ]
+          }
+        ],
+        clues: [
+          { id: "guest-list", name: "宿帳", description: "宿泊客は全員、某企業の幹部とその関係者。偶然の一致ではない——何かの集まり。" },
+          { id: "master-key", name: "合鍵", description: "マスターキーを持つのは女将と番頭だけ。しかし番頭は「三日前から風邪で寝込んでいる」と主張。" },
+          { id: "hidden-button", name: "隠しボタン", description: "黒猫像の目を押すと、帳場裏の壁が開いた。中には——監視モニターと、全室の盗聴装置。" },
+          { id: "legend", name: "由来書", description: "百年前の女将殺害事件。犯人の番頭は「黒猫に祟られて発狂死」したという。しかし——「発狂」の詳細が不自然に省略されている。" },
+          { id: "blood-trace", name: "血の跡", description: "浴槽の縁に拭き取られた血痕。湯で薄まっているが、ルミノール反応は明確。" },
+          { id: "belongings", name: "遺留品", description: "被害者の衣類のポケットからメモ。「今夜、あいつに決着をつける。30年前の真実を暴く」。" },
+          { id: "hair", name: "髪の毛", description: "排水口から長い黒髪。被害者は短髪だった——女性の髪だ。" },
+          { id: "wet-footprint", name: "濡れた足跡", description: "窓の外に濡れた足跡。雨は降っていない——温泉の湯を浴びた者の足跡。" },
+          { id: "sleeping-drug", name: "睡眠薬", description: "布団から睡眠薬の成分が検出。枕にも。被害者は眠らされてから、浴場に運ばれた。" },
+          { id: "cat-hair", name: "猫の毛", description: "窓際に黒い猫の毛。この旅館に猫はいないはず——では、誰が？" },
+          { id: "white-kimono", name: "白い着物", description: "押し入れから濡れた白い着物。血のような染み——いや、これは赤い口紅。" },
+          { id: "last-call", name: "最後の通話", description: "被害者が内線で呼び出した相手——「女将の部屋」。しかし女将は「知らない」と主張。" }
+        ],
+        finalQuestion: "温泉宿の怨霊殺人。白い着物の女の正体は。",
+        choices: [
+          "本物の怨霊（百年前の女将が蘇った）",
+          "現在の女将（先代の恨みを継いで復讐）",
+          "宿泊客の一人（女将に扮して犯行）",
+          "番頭（女将を陥れるための偽装）"
+        ],
+        correctAnswer: 2,
+        solution: "犯人は宿泊客の一人——被害者の元妻でした。\n\n【真相】\n宿泊客は全員、30年前のある事件に関わった者たち。被害者はこの企業の元社長で、かつて妻を捨てて愛人と再婚していました。\n\n元妻は復讐のため、この「同窓会」に偽名で参加。夜中に白い着物を纏い「怨霊」に扮して被害者に近づきました。\n\n黒猫は彼女が連れてきたもの。怨霊伝説を利用し、超自然的な犯行に見せかけたのです。\n\n睡眠薬で眠らせた被害者を大浴場に運び、溺死させました。長い黒髪は犯人自身のもの。白い着物の口紅は、被害者に最後のキスをした痕跡——三十年間消えなかった愛と恨みの証でした。"
+      },
+      {
+        id: 11,
+        title: "鬼火岬",
+        subtitle: "断崖に響く人柱の叫び",
+        location: "能登半島",
+        premium: true,
+        intro: "能登半島の断崖に立つ灯台。百年前、この灯台を建てる際に人柱を埋めたという伝説がある。今年も「鬼火」が目撃された夜、灯台守が惨殺された。荒れ狂う日本海を背に、岬に潜む殺意を暴け。",
+        scenes: [
+          {
+            id: "lighthouse",
+            name: "灯台",
+            description: "断崖に立つ古い灯台。光は消え、闇だけが残っている。",
+            areas: [
+              { id: "top", name: "灯室", top: "15%", left: "40%", clueId: "broken-lens" },
+              { id: "stairs", name: "螺旋階段", top: "35%", right: "25%", clueId: "blood-trail" },
+              { id: "base", name: "灯台の根元", bottom: "30%", left: "30%", clueId: "dig-mark" },
+              { id: "cliff", name: "断崖", bottom: "25%", right: "20%", clueId: "rope" }
+            ]
+          },
+          {
+            id: "village",
+            name: "漁村",
+            description: "灯台の麓に広がる小さな漁村。村人たちは何かを隠している。",
+            areas: [
+              { id: "harbor", name: "港", top: "25%", left: "20%", clueId: "boat-absence" },
+              { id: "shrine", name: "龍神社", top: "40%", right: "25%", clueId: "pillar-legend" },
+              { id: "house", name: "灯台守の家", bottom: "35%", left: "35%", clueId: "diary" },
+              { id: "store", name: "雑貨店", bottom: "25%", right: "30%", clueId: "kerosene" }
+            ]
+          },
+          {
+            id: "cave",
+            name: "海蝕洞",
+            description: "岬の下に広がる洞窟。干潮時のみ入れる——そして、干潮は今夜しかない。",
+            areas: [
+              { id: "entrance", name: "入口", top: "30%", left: "25%", clueId: "tide-table" },
+              { id: "bones", name: "古い骨", top: "40%", right: "20%", clueId: "human-remains" },
+              { id: "altar", name: "祭壇", bottom: "30%", left: "40%", clueId: "offering" },
+              { id: "wall", name: "壁画", bottom: "25%", right: "25%", clueId: "mural" }
+            ]
+          }
+        ],
+        clues: [
+          { id: "broken-lens", name: "割れたレンズ", description: "灯台のレンズが故意に割られていた。灯りが消えた夜——船が座礁する。" },
+          { id: "blood-trail", name: "血の跡", description: "螺旋階段に点々と血の跡。上から下へ——被害者は灯室から突き落とされた。" },
+          { id: "dig-mark", name: "掘り返した跡", description: "灯台の根元が最近掘り返されている。百年前の人柱——それを掘り起こそうとした者がいる。" },
+          { id: "rope", name: "切れたロープ", description: "断崖にロープが残されている。誰かが降りた——あるいは、誰かが落とされた。" },
+          { id: "boat-absence", name: "消えた船", description: "事件当夜、一隻の漁船が港を出ていた。嵐の夜に？ 何かを運び出したのか。" },
+          { id: "pillar-legend", name: "人柱伝説", description: "百年前、灯台建設の際に村娘が人柱にされた言い伝え。しかし——「志願した」という記録と「強制された」という伝承が矛盾。" },
+          { id: "diary", name: "灯台守の日記", description: "「あの骨を見つけてしまった。村長に報告したら、口を塞がれそうになった」——最後のページ。" },
+          { id: "kerosene", name: "灯油の購入記録", description: "被害者が大量の灯油を購入していた。灯台用ではない——何かを燃やすため。" },
+          { id: "tide-table", name: "潮見表", description: "事件当夜は大潮。洞窟に入れるのは年に数回——そして今夜がその日。" },
+          { id: "human-remains", name: "人骨", description: "洞窟から百年前のものと思われる人骨。しかし——一体ではない。複数の骨が混ざっている。" },
+          { id: "offering", name: "新しい供物", description: "祭壇に新しい花と線香。誰かが最近——それも、定期的に訪れている。" },
+          { id: "mural", name: "壁画", description: "壁に描かれた儀式の絵。一人の娘が、複数の男たちに取り囲まれている——人柱ではなく、殺人の場面。" }
+        ],
+        finalQuestion: "鬼火伝説殺人。灯台守はなぜ殺されたのか。",
+        choices: [
+          "人柱の子孫（百年の恨みを晴らすため）",
+          "村長（人柱の真実を隠蔽するため）",
+          "灯台守の息子（遺産目当て）",
+          "漁師（灯台の光で漁ができなくなった恨み）"
+        ],
+        correctAnswer: 1,
+        solution: "犯人は村長でした。\n\n【真相】\n灯台守は洞窟で「人柱」の骨を発見しました。しかしそれは一人ではなく——複数の遺体。しかも、人柱として「志願」したのではなく、殺されて埋められた者たち。\n\n百年前、村の有力者たちは灯台建設の資金を着服。それを告発しようとした者たちを「人柱」として殺し、灯台の下に埋めたのです。\n\n現在の村長は、その有力者の末裔。真実が明るみに出れば、村長の地位も家名も失う。灯台守を殺し、骨を運び出そうとしました。\n\n「鬼火」の正体——それは村長が真実を隠すために演出した幻。しかし本当の鬼は、百年間嘘をつき続けた村そのものでした。"
+      },
+      {
+        id: 12,
+        title: "仮面夜会",
+        subtitle: "華麗なる復讐の舞踏",
+        location: "横浜・山手",
+        premium: true,
+        intro: "横浜山手の洋館で開かれた仮面舞踏会。全員が仮面で顔を隠す中、主催者の令嬢が毒殺された。「私を殺したのは、この中の誰か」——死の直前、彼女が遺した言葉。仮面の下に隠された殺意を、暴き出せ。",
+        scenes: [
+          {
+            id: "ballroom",
+            name: "大広間",
+            description: "舞踏会が行われた豪華な広間。シャンデリアが血に染まった床を照らす。",
+            areas: [
+              { id: "stage", name: "ステージ", top: "20%", left: "40%", clueId: "wine-glass" },
+              { id: "table", name: "ビュッフェ", top: "35%", right: "20%", clueId: "food-analysis" },
+              { id: "floor", name: "ダンスフロア", bottom: "35%", left: "30%", clueId: "dropped-mask" },
+              { id: "balcony", name: "バルコニー", bottom: "25%", right: "25%", clueId: "overheard" }
+            ]
+          },
+          {
+            id: "study",
+            name: "書斎",
+            description: "令嬢の父・財閥当主の書斎。金と秘密が眠る場所。",
+            areas: [
+              { id: "desk", name: "執務机", top: "25%", left: "20%", clueId: "business-letter" },
+              { id: "safe", name: "金庫", top: "40%", right: "25%", clueId: "will" },
+              { id: "photo", name: "家族写真", bottom: "30%", left: "35%", clueId: "hidden-child" },
+              { id: "phone", name: "電話機", bottom: "25%", right: "20%", clueId: "threatening-call" }
+            ]
+          },
+          {
+            id: "garden",
+            name: "薔薇園",
+            description: "洋館を囲む美しい庭園。薔薇の棘のように、秘密が隠されている。",
+            areas: [
+              { id: "fountain", name: "噴水", top: "30%", left: "35%", clueId: "vial" },
+              { id: "bench", name: "ベンチ", top: "35%", right: "20%", clueId: "rendezvous" },
+              { id: "gate", name: "裏門", bottom: "30%", left: "25%", clueId: "escape-route" },
+              { id: "greenhouse", name: "温室", bottom: "25%", right: "30%", clueId: "poison-plant" }
+            ]
+          }
+        ],
+        clues: [
+          { id: "wine-glass", name: "ワイングラス", description: "令嬢のグラスから特殊な毒物が検出。この毒は入手困難——医療関係者か、化学の知識がある者。" },
+          { id: "food-analysis", name: "食品検査", description: "ビュッフェの料理には毒は混入されていなかった。つまり、グラスに直接——犯人は令嬢に近づいた。" },
+          { id: "dropped-mask", name: "落ちた仮面", description: "フロアに落ちていた仮面。内側に口紅が付着——女性が使っていた。しかし、女性用の仮面ではない。" },
+          { id: "overheard", name: "盗み聞き", description: "バルコニーで「今夜、全てに決着をつける」という会話が聞かれた。男の声——しかし、女性的な言い回し。" },
+          { id: "business-letter", name: "取引書類", description: "競合会社との敵対的買収に関する書類。この買収が成功すれば、多くの人が職を失う。" },
+          { id: "will", name: "遺言状", description: "令嬢に全財産を相続させる内容。彼女が死ねば——財閥は解体され、株は暴落する。" },
+          { id: "hidden-child", name: "隠し子", description: "家族写真の裏から、もう一枚の写真。当主には令嬢の他に、認知されていない子供がいた——息子が。" },
+          { id: "threatening-call", name: "脅迫電話", description: "パーティー直前、令嬢宛に脅迫電話。「今夜、真実を世間に公表する」——彼女は何かを隠していた。" },
+          { id: "vial", name: "小瓶", description: "噴水の中から毒物の空き瓶。指紋は拭き取られている——しかし、瓶の形状は医療用。" },
+          { id: "rendezvous", name: "密会の証拠", description: "令嬢は誰かと密会していた。「あなたを愛している。でも、あなたは私の——」手紙は途中で破られている。" },
+          { id: "escape-route", name: "逃走経路", description: "裏門から誰かが逃げ出した足跡。ハイヒールの跡——しかし、歩幅が男性のもの。" },
+          { id: "poison-plant", name: "毒草", description: "温室で栽培されていた毒草が最近切り取られた跡。この植物から毒を抽出できる——専門知識があれば。" }
+        ],
+        finalQuestion: "仮面舞踏会の殺人。令嬢を毒殺した仮面の人物は誰か。",
+        choices: [
+          "令嬢の婚約者（財産目当ての偽りの愛）",
+          "財閥の隠し子（正当な相続権を奪われた恨み）",
+          "競合会社の社長（買収阻止のため）",
+          "令嬢の侍女（長年の屈辱への復讐）"
+        ],
+        correctAnswer: 1,
+        solution: "犯人は財閥の隠し子——令嬢の異母兄でした。\n\n【真相】\n犯人は当主が愛人に産ませた息子。正妻の娘である令嬢が全てを相続することに、幼い頃から恨みを抱いていました。\n\n彼は仮面舞踏会に女装して紛れ込みました。落ちていた仮面の口紅、ハイヒールの足跡、女性的な言い回し——全ては性別を偽装するため。\n\n温室の毒草から抽出した毒を令嬢のワイングラスに投入。密会の相手は実は犯人自身——彼は「恋人」として令嬢に近づいていたのです。手紙の「あなたは私の——」の続きは「兄」。\n\n「私を殺したのは、この中の誰か」——令嬢は死の間際、犯人の正体に気づいていました。仮面の下に隠された、血を分けた者による裏切り。"
+      },
+      {
+        id: 13,
+        title: "写真館の亡霊",
+        subtitle: "銀板に焼きつく死者の顔",
+        location: "京都・東山",
+        premium: false,
+        intro: "明治時代から続く老舗写真館「幻燈堂」。その地下室から、百年前の写真乾板が大量に発見された。そこに写っていたのは——すでに死んでいるはずの人々の「生前最後の姿」。そして今夜、写真館の主人が、自らが撮った集合写真の中央で死んでいた。",
+        scenes: [
+          {
+            id: "studio",
+            name: "撮影スタジオ",
+            description: "重厚なカーテンと古い照明器具。被害者は椅子に座ったまま、目を見開いて死んでいた。",
+            areas: [
+              { id: "chair", name: "撮影用椅子", top: "25%", left: "30%", clueId: "death-pose" },
+              { id: "camera", name: "古いカメラ", top: "35%", right: "20%", clueId: "last-photo" },
+              { id: "backdrop", name: "背景幕", bottom: "30%", left: "20%", clueId: "hidden-door" },
+              { id: "lights", name: "照明", top: "15%", left: "50%", message: "フラッシュ用のマグネシウムランプ。今は使われていないはずだが、最近点火された形跡がある。" }
+            ]
+          },
+          {
+            id: "darkroom",
+            name: "暗室",
+            description: "赤い暗室灯が照らす現像室。薬品の匂いが鼻を突く。",
+            areas: [
+              { id: "tanks", name: "現像タンク", top: "30%", left: "25%", clueId: "poison-chemical" },
+              { id: "drying", name: "乾燥棚", top: "40%", right: "20%", clueId: "secret-photos" },
+              { id: "sink", name: "流し台", bottom: "35%", left: "40%", clueId: "blood-residue" },
+              { id: "timer", name: "タイマー", bottom: "25%", right: "25%", clueId: "time-of-death" }
+            ]
+          },
+          {
+            id: "archive",
+            name: "地下資料室",
+            description: "百年分の写真が眠る地下室。埃と記憶が堆積している。",
+            areas: [
+              { id: "plates", name: "乾板棚", top: "25%", left: "15%", clueId: "old-plates" },
+              { id: "albums", name: "アルバム", top: "40%", right: "25%", clueId: "family-history" },
+              { id: "desk", name: "古い机", bottom: "30%", left: "35%", clueId: "blackmail-letter" },
+              { id: "safe", name: "金庫", bottom: "25%", right: "20%", clueId: "forbidden-photos" }
+            ]
+          }
+        ],
+        clues: [
+          { id: "death-pose", name: "死の姿勢", description: "被害者は撮影用の姿勢で死んでいた。まるで「遺影」を撮るかのように——計画的な演出。" },
+          { id: "last-photo", name: "最後の写真", description: "カメラには撮影されたばかりのフィルム。現像すると——被害者と、その背後に立つ影。" },
+          { id: "hidden-door", name: "隠し扉", description: "背景幕の後ろに隠し扉。地下資料室に直接繋がっている。" },
+          { id: "poison-chemical", name: "毒性薬品", description: "現像用薬品の中に、通常では使わない青酸カリが混入していた。" },
+          { id: "secret-photos", name: "秘密の写真", description: "乾燥棚に、社会的地位のある人物たちの「問題のある」写真。これは——脅迫のネタ。" },
+          { id: "blood-residue", name: "血の痕跡", description: "流し台から微量の血液反応。しかし被害者に外傷はない——別の誰かの血？" },
+          { id: "time-of-death", name: "死亡推定時刻", description: "タイマーは午後8時で止まっていた。しかし被害者の腕時計は9時を指していた——一時間のズレ。" },
+          { id: "old-plates", name: "百年前の乾板", description: "乾板には処刑前の囚人や、死の床にある病人の写真。この写真館は「死」を撮り続けてきた。" },
+          { id: "family-history", name: "家族の歴史", description: "写真館は三代続く家業。しかし二代目の時に「何か」があり、多くの記録が欠落している。" },
+          { id: "blackmail-letter", name: "脅迫状", description: "被害者宛の脅迫状。「あの写真を公開されたくなければ」——被害者は脅迫されていた側。" },
+          { id: "forbidden-photos", name: "禁断の写真", description: "金庫から、政界の大物と反社会勢力の密会写真。これが公開されれば——多くの人間が破滅する。" }
+        ],
+        finalQuestion: "写真館殺人の真犯人。百年の秘密を守るために殺したのは誰か。",
+        choices: [
+          "被害者の弟子（師匠の地位を奪うため）",
+          "脅迫されていた政治家（秘密を守るため）",
+          "被害者の妻（夫の裏の顔を知って）",
+          "写真館の先代の隠し子（家業の復讐）"
+        ],
+        correctAnswer: 1,
+        solution: "犯人は脅迫されていた政治家でした。\n\n【真相】\nこの写真館は三代にわたり、権力者たちの「弱み」を撮影し、脅迫で利益を得てきました。被害者はその三代目。\n\n政治家は長年脅迫され続け、ついに限界に達しました。撮影の約束と称して写真館を訪れ、背景幕の隠し扉から侵入。現像液に毒を混入させました。\n\n「最後の写真」に写る影は、実は犯人ではなく——被害者自身が仕掛けた自動撮影の三脚。被害者は自分が殺される瞬間を記録しようとしていたのです。脅迫者として生き、記録者として死んだ。\n\n一時間のズレ——犯人がアリバイ工作のためにタイマーを操作した証拠でした。"
+      },
+      {
+        id: 14,
+        title: "地下鉄の怪人",
+        subtitle: "終電後の路線図に消えた乗客",
+        location: "東京・地下鉄網",
+        premium: false,
+        intro: "終電後の地下鉄で、乗客が次々と消えている。監視カメラには乗車する姿は映っているが、下車する姿がない。車内には血痕だけが残されている。「地下には別の世界がある」——都市伝説が現実になった夜、あなたは最終電車に乗り込む。",
+        scenes: [
+          {
+            id: "platform",
+            name: "終着駅ホーム",
+            description: "誰もいない終着駅。蛍光灯が不規則に明滅している。",
+            areas: [
+              { id: "bench", name: "ベンチ", top: "25%", left: "20%", clueId: "abandoned-bag" },
+              { id: "camera", name: "監視カメラ", top: "15%", right: "30%", clueId: "footage" },
+              { id: "tracks", name: "線路", bottom: "30%", left: "40%", clueId: "blood-on-track" },
+              { id: "door", name: "関係者用扉", bottom: "25%", right: "20%", clueId: "staff-key" }
+            ]
+          },
+          {
+            id: "tunnel",
+            name: "廃トンネル",
+            description: "使われなくなった旧路線のトンネル。地図にも載っていない場所。",
+            areas: [
+              { id: "junction", name: "分岐点", top: "30%", left: "25%", clueId: "hidden-switch" },
+              { id: "room", name: "機械室", top: "35%", right: "20%", clueId: "control-panel" },
+              { id: "wall", name: "壁の落書き", bottom: "35%", left: "35%", clueId: "warning-message" },
+              { id: "end", name: "行き止まり", bottom: "25%", right: "25%", clueId: "secret-exit" }
+            ]
+          },
+          {
+            id: "control",
+            name: "運行管理室",
+            description: "列車の運行を監視する部屋。モニターが無数に並ぶ。",
+            areas: [
+              { id: "monitors", name: "モニター群", top: "25%", left: "15%", clueId: "deleted-footage" },
+              { id: "schedule", name: "運行表", top: "40%", right: "25%", clueId: "phantom-train" },
+              { id: "locker", name: "ロッカー", bottom: "30%", left: "40%", clueId: "uniform" },
+              { id: "log", name: "運行記録", bottom: "25%", right: "20%", clueId: "falsified-record" }
+            ]
+          }
+        ],
+        clues: [
+          { id: "abandoned-bag", name: "遺留品", description: "ベンチに残された鞄。中身は無事だが、持ち主の携帯電話だけが壊されている。" },
+          { id: "footage", name: "監視映像", description: "乗客が乗車する映像はある。しかし次の駅のカメラには映っていない——車内で「消えた」。" },
+          { id: "blood-on-track", name: "線路の血痕", description: "線路上に点々と血痕。しかし轢断の痕跡はない——生きたまま引きずられた？" },
+          { id: "staff-key", name: "関係者用の鍵", description: "落ちていた特殊な鍵。これがあれば、地下鉄のあらゆる扉を開けられる。" },
+          { id: "hidden-switch", name: "隠された分岐", description: "正規の路線図にない分岐点。ここから旧トンネルに入れる——公式には「存在しない」場所。" },
+          { id: "control-panel", name: "制御盤", description: "旧式の制御盤がまだ動いている。誰かがこのトンネルを「使っている」。" },
+          { id: "warning-message", name: "警告の落書き", description: "壁に「ここから先は戻れない」と赤い文字で。最近書かれたもの。" },
+          { id: "secret-exit", name: "秘密の出口", description: "行き止まりの先に、地上への階段を発見。出口は——とある企業の地下倉庫だった。" },
+          { id: "deleted-footage", name: "消された映像", description: "事件当夜の特定の時間帯だけ、映像が「機器の故障」として削除されていた。" },
+          { id: "phantom-train", name: "幽霊列車", description: "運行表にない列車が、深夜2時に走っている記録。行き先——存在しない駅名。" },
+          { id: "uniform", name: "作業員の制服", description: "ロッカーに血のついた作業員の制服。サイズは公式の記録と一致しない。" },
+          { id: "falsified-record", name: "改竄された記録", description: "過去三ヶ月の深夜、同じ時間帯に「点検」が行われている記録。しかし点検担当者は「知らない」と証言。" }
+        ],
+        finalQuestion: "地下鉄連続失踪事件。「怪人」の正体は誰か。",
+        choices: [
+          "精神を病んだ元運転士（地下に執着）",
+          "運行管理室の職員（秘密の人身売買組織）",
+          "都市探検家グループ（犯罪に巻き込まれた）",
+          "鉄道会社の幹部（企業の秘密を守るため）"
+        ],
+        correctAnswer: 1,
+        solution: "犯人は運行管理室の職員——人身売買組織の一員でした。\n\n【真相】\n地下鉄の廃トンネルは、国際的な人身売買組織の「輸送路」として使われていました。終電後の「幽霊列車」で被害者を運び、秘密の出口から企業の倉庫——実は密輸の拠点——へと送り出していたのです。\n\n犯人は運行管理室の職員として、監視カメラを操作し、運行記録を改竄。被害者が「消えた」ように見せかけていました。\n\n血痕は抵抗した被害者のもの。携帯電話を壊したのは、GPS追跡を防ぐため。「存在しない駅」は廃トンネル内の積み下ろし地点のコード名。\n\n地下鉄の怪人——それは一人ではなく、組織的犯罪の歯車でした。"
+      },
+      {
+        id: 15,
+        title: "蝋人形の館",
+        subtitle: "生きている目が見つめる",
+        location: "長崎・グラバー園近郊",
+        premium: true,
+        intro: "長崎の丘に建つ古い洋館。そこには精巧な蝋人形が百体以上展示されている。「この人形には魂が宿っている」と館主は言う。ある夜、来館者が人形の中に「新しい一体」を発見した——それは行方不明だった女性の、蝋で覆われた遺体だった。",
+        scenes: [
+          {
+            id: "gallery",
+            name: "展示室",
+            description: "ガラスケースに収められた蝋人形が整然と並ぶ。どの目も、こちらを見ているように感じる。",
+            areas: [
+              { id: "case1", name: "西洋貴婦人", top: "25%", left: "20%", clueId: "real-hair" },
+              { id: "case2", name: "明治の紳士", top: "35%", right: "25%", clueId: "glass-eyes" },
+              { id: "new-figure", name: "新しい人形", bottom: "30%", left: "40%", clueId: "victim-body" },
+              { id: "pedestal", name: "空の台座", bottom: "25%", right: "20%", clueId: "missing-figure" }
+            ]
+          },
+          {
+            id: "workshop",
+            name: "蝋人形工房",
+            description: "人形を製作する工房。蝋の匂いが充満し、未完成の人形が並ぶ。",
+            areas: [
+              { id: "furnace", name: "溶解炉", top: "30%", left: "25%", clueId: "melted-wax" },
+              { id: "molds", name: "型取り道具", top: "40%", right: "20%", clueId: "life-cast" },
+              { id: "materials", name: "材料棚", bottom: "35%", left: "35%", clueId: "chemical-list" },
+              { id: "freezer", name: "冷凍庫", bottom: "25%", right: "25%", clueId: "preserved-parts" }
+            ]
+          },
+          {
+            id: "residence",
+            name: "館主の私室",
+            description: "館に併設された居住スペース。壁には蝋人形のスケッチが無数に貼られている。",
+            areas: [
+              { id: "desk", name: "作業机", top: "25%", left: "15%", clueId: "order-list" },
+              { id: "album", name: "写真帳", top: "40%", right: "25%", clueId: "before-after" },
+              { id: "letter", name: "手紙の束", bottom: "30%", left: "40%", clueId: "threat-letter" },
+              { id: "closet", name: "衣装部屋", bottom: "25%", right: "20%", clueId: "victim-clothes" }
+            ]
+          }
+        ],
+        clues: [
+          { id: "real-hair", name: "本物の髪", description: "蝋人形の髪の毛が本物の人毛だった。しかも——DNA鑑定で、行方不明者と一致。" },
+          { id: "glass-eyes", name: "義眼の違和感", description: "明治紳士の人形の目だけが、他と違う。最近入れ替えられた——本物の人間の角膜？" },
+          { id: "victim-body", name: "蝋に覆われた遺体", description: "表面は蝋人形だが、中には人間の遺体。死因は窒息——生きたまま蝋を被せられた。" },
+          { id: "missing-figure", name: "消えた人形", description: "台座に「明治の令嬢」のプレートがあるが、人形がない。カタログには存在する人形。" },
+          { id: "melted-wax", name: "溶けた蝋の痕跡", description: "炉に大量の蝋が溶かされた形跡。人一人を覆うには——ちょうどこの量。" },
+          { id: "life-cast", name: "生体型取り", description: "生きた人間から直接型を取る道具一式。呼吸用のストローや、目を保護する器具。" },
+          { id: "chemical-list", name: "薬品リスト", description: "蝋人形製作に通常使わない薬品——筋弛緩剤と麻酔薬の発注記録。" },
+          { id: "preserved-parts", name: "保存された部品", description: "冷凍庫に「材料」とラベルされた袋。中身は——人間の指や耳。" },
+          { id: "order-list", name: "特別注文書", description: "裏の顧客からの「特別注文」リスト。「本物そっくりの人形」の依頼。写真付き——全員、失踪者。" },
+          { id: "before-after", name: "製作過程写真", description: "「人形」の製作過程を記録した写真帳。最初の写真は——生きている人間。" },
+          { id: "threat-letter", name: "脅迫状", description: "「知りすぎた者」への脅迫状の下書き。被害者の名前が——そして、次のターゲットの名前も。" },
+          { id: "victim-clothes", name: "被害者の衣服", description: "衣装部屋に、行方不明者が最後に着ていた服。洗濯されず、そのまま保管されている。" }
+        ],
+        finalQuestion: "蝋人形館連続殺人。芸術家は誰を「作品」にしたのか。",
+        choices: [
+          "館主（芸術への狂気的執着）",
+          "館主の助手（師匠に命じられて）",
+          "富豪のコレクター（人間の人形を発注）",
+          "行方不明者の関係者（復讐の偽装殺人）"
+        ],
+        correctAnswer: 0,
+        solution: "犯人は館主自身でした。\n\n【真相】\n館主は「究極のリアリズム」を追求する狂気の芸術家でした。彼は蝋人形では満足できなくなり、ついに「本物の人間」を作品にすることを決意。\n\n被害者たちは館主が「美しい」と感じた人々。彼らを誘拐し、麻酔で眠らせ、生きたまま蝋を被せて窒息死させました。それが彼の「芸術」。\n\n「消えた人形」は被害者の一人——遺族に気づかれそうになったため、急遽隠された。特別注文のリストは実は館主自身が選んだ「次の作品」。\n\n冷凍庫の「部品」は、複数の被害者から取られたもの。館主は人形の「パーツ」として人体を使っていたのです。芸術という名の狂気が、この館を死の工房に変えていました。"
+      },
+      {
+        id: 16,
+        title: "深海からの招待状",
+        subtitle: "沈没船に眠る四十年の秘密",
+        location: "沖縄・慶良間諸島沖",
+        premium: true,
+        intro: "四十年前に沈没した豪華客船「海神丸」。船内金庫には十億円の財宝が眠っているという。引き揚げ計画のために集められた六人のダイバー。しかし潜水を始めた途端、一人が海底で殺された。「この船には呪いがある」——生存者の言葉は真実か、それとも。",
+        scenes: [
+          {
+            id: "ship",
+            name: "沈没船内部",
+            description: "海底40メートルに眠る客船の残骸。腐食した船体の中は、闇と沈黙に包まれている。",
+            areas: [
+              { id: "safe-room", name: "金庫室", top: "25%", left: "30%", clueId: "opened-safe" },
+              { id: "cabin", name: "一等客室", top: "35%", right: "20%", clueId: "skeleton" },
+              { id: "bridge", name: "操舵室", bottom: "30%", left: "20%", clueId: "captain-log" },
+              { id: "engine", name: "機関室", bottom: "25%", right: "30%", clueId: "explosion-cause" }
+            ]
+          },
+          {
+            id: "support-ship",
+            name: "支援船上",
+            description: "海上の作業船。ダイバーたちの拠点であり、最初の殺人現場。",
+            areas: [
+              { id: "dive-deck", name: "潜水デッキ", top: "30%", left: "25%", clueId: "cut-air-hose" },
+              { id: "comm-room", name: "通信室", top: "40%", right: "20%", clueId: "distress-call" },
+              { id: "quarters", name: "乗員室", bottom: "35%", left: "40%", clueId: "team-photo" },
+              { id: "storage", name: "機材庫", bottom: "25%", right: "25%", clueId: "sabotaged-gear" }
+            ]
+          },
+          {
+            id: "archive",
+            name: "海事資料館",
+            description: "沈没事故の調査資料が保管されている。しかし一部は「閲覧禁止」に。",
+            areas: [
+              { id: "report", name: "事故報告書", top: "25%", left: "15%", clueId: "official-cause" },
+              { id: "passenger", name: "乗客名簿", top: "40%", right: "25%", clueId: "survivor-list" },
+              { id: "newspaper", name: "当時の新聞", bottom: "30%", left: "35%", clueId: "hidden-article" },
+              { id: "insurance", name: "保険記録", bottom: "25%", right: "20%", clueId: "massive-payout" }
+            ]
+          }
+        ],
+        clues: [
+          { id: "opened-safe", name: "開いた金庫", description: "金庫は既に開いていた——四十年前に。「財宝」は最初から存在しなかった？" },
+          { id: "skeleton", name: "客室の白骨", description: "一等客室に閉じ込められた白骨。ドアは外から溶接されていた——殺人。" },
+          { id: "captain-log", name: "航海日誌", description: "最後のページ「我々は騙された。船は沈められる。犯人は——」以降は水で消えている。" },
+          { id: "explosion-cause", name: "爆発の痕跡", description: "機関室に意図的な爆破の痕跡。事故ではない——計画的な沈没。" },
+          { id: "cut-air-hose", name: "切断されたホース", description: "被害者のエアホースが鋭利な刃物で切断されていた。水深40mで空気を断たれれば——。" },
+          { id: "distress-call", name: "救難信号", description: "四十年前の沈没時、救難信号は発信されていなかった。船は「消えた」のだ。" },
+          { id: "team-photo", name: "チームの写真", description: "六人のダイバーの集合写真。しかし一人だけ、四十年前の乗客名簿にも名前がある。" },
+          { id: "sabotaged-gear", name: "破壊された機材", description: "予備の潜水機材が全て使用不能に。誰かが全員を海底に閉じ込めようとしている。" },
+          { id: "official-cause", name: "公式発表", description: "沈没原因は「原因不明の爆発」。調査は打ち切られ、真相は闇に。" },
+          { id: "survivor-list", name: "生存者リスト", description: "乗客287名中、生存者はわずか12名。その中に——現在の引き揚げ計画のスポンサー。" },
+          { id: "hidden-article", name: "隠された記事", description: "沈没直前、船から大量の荷物が別の船に積み替えられたという目撃証言。" },
+          { id: "massive-payout", name: "保険金記録", description: "沈没による保険金は当時の金額で三十億円。受取人は——船のオーナー自身。" }
+        ],
+        finalQuestion: "深海の殺人と四十年前の沈没事故。全てを繋ぐ真実は。",
+        choices: [
+          "引き揚げスポンサー（保険詐欺の隠蔽）",
+          "被害者のダイバー（実は生存者の一人で復讐目的）",
+          "チームリーダー（財宝の独占を企んで）",
+          "四十年前の船長の息子（父の汚名をそそぐため）"
+        ],
+        correctAnswer: 0,
+        solution: "犯人は引き揚げスポンサー——四十年前の船のオーナーでした。\n\n【真相】\n四十年前、オーナーは経営難から船を故意に沈没させ、保険金を詐取しました。「財宝」の噂は、沈没を正当化するための嘘。実際の貴重品は沈没前に別の船に移されていました。\n\n白骨の人物は真実を知った乗客。オーナーは彼を客室に閉じ込め、船と共に沈めたのです。\n\n今回の「引き揚げ計画」は、証拠隠滅のための偽装。海底に残る爆破痕跡や、殺害された乗客の遺体を秘密裏に処分するのが本当の目的でした。被害者のダイバーは偶然、客室の白骨を発見してしまった。\n\n四十年の時を超えた殺人——最初の犯罪を隠すために、新たな犯罪が生まれたのです。"
+      },
+      {
+        id: 17,
+        title: "最後の晩餐会",
+        subtitle: "七人の容疑者、七つの毒杯",
+        location: "軽井沢・別荘地",
+        premium: false,
+        intro: "大富豪・黒沢財閥の当主が、遺言状公開の前夜に開いた晩餐会。招かれたのは遺産相続の候補者七人。深夜、当主が毒殺された。驚くべきことに、七人全員のグラスから微量の毒が検出された。「全員が犯人か、それとも——」",
+        scenes: [
+          {
+            id: "dining",
+            name: "大食堂",
+            description: "豪華なシャンデリアの下、まだ食事の跡が残るテーブル。七人の席には、七つのワイングラス。",
+            areas: [
+              { id: "head-seat", name: "当主の席", top: "20%", left: "40%", clueId: "fatal-glass" },
+              { id: "table", name: "テーブル中央", top: "35%", right: "25%", clueId: "wine-bottle" },
+              { id: "side-table", name: "サイドテーブル", bottom: "30%", left: "20%", clueId: "decanter" },
+              { id: "floor", name: "床", bottom: "25%", right: "30%", clueId: "broken-glass" }
+            ]
+          },
+          {
+            id: "kitchen",
+            name: "厨房",
+            description: "一流シェフが腕を振るった厨房。しかし今は、不気味な静寂に包まれている。",
+            areas: [
+              { id: "counter", name: "調理台", top: "30%", left: "25%", clueId: "ingredient-list" },
+              { id: "storage", name: "食材庫", top: "40%", right: "20%", clueId: "missing-item" },
+              { id: "trash", name: "ゴミ箱", bottom: "35%", left: "40%", clueId: "poison-package" },
+              { id: "schedule", name: "配膳表", bottom: "25%", right: "25%", clueId: "serving-order" }
+            ]
+          },
+          {
+            id: "study",
+            name: "当主の書斎",
+            description: "遺言状が保管されていた部屋。金庫は開いたまま。",
+            areas: [
+              { id: "safe", name: "金庫", top: "25%", left: "15%", clueId: "will-content" },
+              { id: "desk", name: "執務机", top: "40%", right: "25%", clueId: "secret-note" },
+              { id: "bookshelf", name: "本棚", bottom: "30%", left: "35%", clueId: "hidden-diary" },
+              { id: "window", name: "窓", bottom: "25%", right: "20%", clueId: "outside-visitor" }
+            ]
+          }
+        ],
+        clues: [
+          { id: "fatal-glass", name: "致死量のグラス", description: "当主のグラスだけが致死量の毒を含んでいた。他の六人のグラスは、微量——致死量の百分の一以下。" },
+          { id: "wine-bottle", name: "ワインボトル", description: "テーブルのワインボトルは無害。毒は個別のグラスに入れられた——七人分、別々に。" },
+          { id: "decanter", name: "デキャンタ", description: "当主専用のデキャンタから、濃縮された毒が検出。これだけが「本物」の凶器。" },
+          { id: "broken-glass", name: "割れたグラス", description: "床に割れたグラスの破片。八つ目のグラス——招かれなかった八人目がいた？" },
+          { id: "ingredient-list", name: "食材リスト", description: "当日の食材リスト。しかし一つだけ、シェフが「注文していない」と言う食材が含まれている。" },
+          { id: "missing-item", name: "消えた調味料", description: "特殊な薬草の瓶が食材庫から消えている。大量に使えば——神経毒になる。" },
+          { id: "poison-package", name: "毒物の包装", description: "ゴミ箱から毒物の空き瓶。指紋は拭き取られている——が、瓶の底に爪の跡。" },
+          { id: "serving-order", name: "配膳順序", description: "当主のグラスを配膳したのは、給仕ではなく——相続候補者の一人、自ら志願して。" },
+          { id: "will-content", name: "遺言状の内容", description: "遺言状には「私を最も愛した者に全てを」と記されていた。具体的な名前はない。" },
+          { id: "secret-note", name: "当主のメモ", description: "「今夜、裏切り者を炙り出す」——当主は最初から誰かを疑っていた。" },
+          { id: "hidden-diary", name: "隠された日記", description: "当主の日記。「七人に微量の毒を飲ませ、反応を見る。真犯人だけが動揺するはずだ」。" },
+          { id: "outside-visitor", name: "窓からの侵入跡", description: "書斎の窓に、外からこじ開けられた痕跡。しかし室内に足跡はない——フェイク？" }
+        ],
+        finalQuestion: "晩餐会殺人の真相。七人の中の犯人は誰か。",
+        choices: [
+          "当主の長男（早く遺産が欲しかった）",
+          "当主の秘書（長年の恨みを晴らすため）",
+          "当主の愛人（遺言状から外されることを恐れて）",
+          "当主自身（殺人ではなく自殺だった）"
+        ],
+        correctAnswer: 3,
+        solution: "これは殺人ではありませんでした。当主の「自殺」です。\n\n【真相】\n当主は末期の病で余命わずかでした。彼は死ぬ前に、自分を裏切った者を見つけ出したかったのです。\n\n晩餐会で七人に微量の毒を飲ませたのは、当主自身の計画。「犯人」が動揺して正体を現すと考えました。そして自分は——致死量を飲んで「殺された」ように見せかけたのです。\n\n遺言状の「最も愛した者に」とは、皮肉でした。本当の遺言状は別にあり、全財産は慈善団体に寄付されていました。七人の相続候補者は、全員が裏切り者だったのです。\n\n当主の最後の復讐——死してなお、彼らに「犯人」の疑いを残し、互いを疑わせ続ける。七人の晩餐会は、永遠に終わらない疑心暗鬼の始まりでした。"
+      }
+    ];
+
+    // ========== アプリの状態 ==========
+    let state = {
+      currentPage: 'home',
+      currentEpisode: null,
+      currentSceneIndex: 0,
+      gamePhase: 'intro',
+      foundClues: [],
+      selectedAnswer: null,
+      completedEpisodes: JSON.parse(localStorage.getItem('completedEpisodes') || '[]'),
+      showModal: null,
+      modalData: null
+    };
+
+    // ========== レンダリング関数 ==========
+    function render() {
+      const app = document.getElementById('app');
+      
+      if (state.currentEpisode) {
+        app.innerHTML = renderGame();
+      } else {
+        app.innerHTML = renderMain();
+      }
+      
+      attachEventListeners();
+    }
+
+    function renderMain() {
+      let content = '';
+      
+      switch(state.currentPage) {
+        case 'home':
+          content = renderHomePage();
+          break;
+        case 'list':
+          content = renderListPage();
+          break;
+        case 'premium':
+          content = renderPremiumPage();
+          break;
+        case 'settings':
+          content = renderSettingsPage();
+          break;
+      }
+      
+      return `
+        <div class="header">
+          <h1>深淵の探偵録</h1>
+          <p>〜闇に潜む真実を暴け〜</p>
+        </div>
+        <div class="container">
+          ${content}
+        </div>
+        ${renderNav()}
+        ${state.showModal ? renderModal() : ''}
+      `;
+    }
+
+    function renderHomePage() {
+      const freeEpisodes = episodes.filter(e => !e.premium);
+      const featured = freeEpisodes[Math.floor(Math.random() * Math.min(3, freeEpisodes.length))];
+      
+      return `
+        <div class="card">
+          <div class="chapter-mark">〜 本日の事件 〜</div>
+          <div class="episode-card" data-episode="${featured.id}">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+              <span class="badge badge-free">無料</span>
+              ${state.completedEpisodes.includes(featured.id) ? '<span class="badge badge-clear">解決済</span>' : ''}
+            </div>
+            <div class="episode-title">${featured.title}</div>
+            <p class="episode-subtitle">${featured.subtitle}</p>
+            <p class="episode-location">📍 ${featured.location}</p>
+          </div>
+        </div>
+        
+        <div class="warning-box">
+          <div class="icon">⚠️</div>
+          <p style="color: #8b2020; font-size: 0.875rem;">この物語には残虐な描写が含まれます</p>
+        </div>
+
+        <div class="card">
+          <h2 class="card-title">未解決事件簿</h2>
+          ${freeEpisodes.filter(ep => !state.completedEpisodes.includes(ep.id)).slice(0, 4).map(ep => `
+            <div class="episode-card" data-episode="${ep.id}">
+              <div class="episode-title">${ep.title}</div>
+              <p class="episode-subtitle">${ep.subtitle}</p>
+              <p class="episode-location">📍 ${ep.location}</p>
+            </div>
+          `).join('') || '<p style="color: #444; text-align: center; padding: 1rem;">全ての事件を解決しました</p>'}
+        </div>
+
+        <div class="card">
+          <h2 class="card-title">月額会員限定 〜深淵編〜</h2>
+          ${episodes.filter(e => e.premium).slice(0, 2).map(ep => `
+            <div class="episode-card premium" data-episode="${ep.id}">
+              <span class="premium-badge">PREMIUM</span>
+              <div class="episode-title">${ep.title}</div>
+              <p class="episode-subtitle">${ep.subtitle}</p>
+              <p class="episode-location">📍 ${ep.location}</p>
+            </div>
+          `).join('')}
+          <button class="btn btn-amber btn-full" onclick="state.currentPage='premium'; render();">
+            月額100円で全事件解放
+          </button>
+        </div>
+      `;
+    }
+
+    function renderListPage() {
+      const freeEpisodes = episodes.filter(e => !e.premium);
+      const premiumEpisodes = episodes.filter(e => e.premium);
+      
+      return `
+        <div class="card">
+          <h2 class="card-title">無料事件（${freeEpisodes.length}件）</h2>
+          ${freeEpisodes.map(ep => `
+            <div class="episode-card" data-episode="${ep.id}">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                <span class="badge badge-free">無料</span>
+                ${state.completedEpisodes.includes(ep.id) ? '<span class="badge badge-clear">解決済</span>' : ''}
+              </div>
+              <div class="episode-title">${ep.title}</div>
+              <p class="episode-subtitle">${ep.subtitle}</p>
+              <p class="episode-location">📍 ${ep.location}</p>
+            </div>
+          `).join('')}
+        </div>
+
+        <div class="card">
+          <h2 class="card-title">深淵編（${premiumEpisodes.length}件）</h2>
+          ${premiumEpisodes.map(ep => `
+            <div class="episode-card premium" data-episode="${ep.id}">
+              <span class="premium-badge">PREMIUM</span>
+              <div style="margin-bottom: 0.5rem;">
+                ${state.completedEpisodes.includes(ep.id) ? '<span class="badge badge-clear">解決済</span>' : ''}
+              </div>
+              <div class="episode-title">${ep.title}</div>
+              <p class="episode-subtitle">${ep.subtitle}</p>
+              <p class="episode-location">📍 ${ep.location}</p>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function renderPremiumPage() {
+      return `
+        <div class="card" style="text-align: center;">
+          <div style="font-size: 4rem; margin-bottom: 1rem;">🔮</div>
+          <h2 style="font-size: 1.5rem; margin-bottom: 0.5rem; color: #c9a55c;">深淵会員</h2>
+          <p style="color: #8a8070; margin-bottom: 1.5rem;">月額100円で全ての闇に挑む</p>
+          
+          <div style="text-align: left;">
+            <div class="premium-feature">
+              <span class="premium-icon">📚</span>
+              <div>
+                <div style="font-weight: bold; color: #c9a55c;">全12話+毎月新作配信</div>
+                <div style="color: #8a8070; font-size: 0.875rem;">日本の闇を描く本格長編ミステリー</div>
+              </div>
+            </div>
+            <div class="premium-feature">
+              <span class="premium-icon">🗺️</span>
+              <div>
+                <div style="font-weight: bold; color: #c9a55c;">全国各地の伝奇ミステリー</div>
+                <div style="color: #8a8070; font-size: 0.875rem;">因習・怨霊・見立て殺人</div>
+              </div>
+            </div>
+            <div class="premium-feature">
+              <span class="premium-icon">💡</span>
+              <div>
+                <div style="font-weight: bold; color: #c9a55c;">推理ヒント機能</div>
+                <div style="color: #8a8070; font-size: 0.875rem;">行き詰まった時の手助け</div>
+              </div>
+            </div>
+            <div class="premium-feature">
+              <span class="premium-icon">📖</span>
+              <div>
+                <div style="font-weight: bold; color: #c9a55c;">解説・考察コラム</div>
+                <div style="color: #8a8070; font-size: 0.875rem;">事件の背景や時代考証</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="divider"></div>
+          
+          <button class="btn btn-amber btn-full" style="margin-top: 1rem;">
+            月額100円で始める
+          </button>
+          <p style="color: #444; font-size: 0.75rem; margin-top: 0.5rem;">
+            いつでも解約可能・初月無料
+          </p>
+        </div>
+      `;
+    }
+
+    function renderSettingsPage() {
+      const totalEpisodes = episodes.length;
+      const cleared = state.completedEpisodes.length;
+      
+      return `
+        <div class="card">
+          <h2 class="card-title">探偵実績</h2>
+          
+          <div style="padding: 1rem 0; border-bottom: 1px solid #3d1515;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span>解決した事件</span>
+              <span style="color: #c9a55c;">${cleared} / ${totalEpisodes} 件</span>
+            </div>
+          </div>
+          
+          <div style="padding: 1rem 0; border-bottom: 1px solid #3d1515;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span>探偵ランク</span>
+              <span style="color: #c9a55c;">${getRank(cleared)}</span>
+            </div>
+          </div>
+          
+          <div style="padding: 1rem 0; border-bottom: 1px solid #3d1515;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span>深淵会員</span>
+              <span style="color: #444;">未登録</span>
+            </div>
+          </div>
+          
+          <button class="btn btn-danger btn-full" style="margin-top: 1rem;" onclick="resetProgress()">
+            進行状況をリセット
+          </button>
+        </div>
+        
+        <div class="card">
+          <h2 class="card-title">このアプリについて</h2>
+          <p style="color: #8a8070; line-height: 1.8;">
+            「深淵の探偵録」は、日本各地の因習や伝承をモチーフにしたオリジナル推理ゲームです。
+          </p>
+          <p style="color: #8a8070; line-height: 1.8; margin-top: 0.5rem;">
+            地方の因習、旧家の血筋、見立て殺人...。おどろおどろしい雰囲気の中で、手がかりを集め、真犯人を見つけ出してください。
+          </p>
+          <p style="color: #444; font-size: 0.875rem; margin-top: 1rem;">
+            バージョン 3.0.0
+          </p>
+        </div>
+      `;
+    }
+
+    function getRank(cleared) {
+      if (cleared >= 10) return '闇を見通す者';
+      if (cleared >= 7) return '深淵の探求者';
+      if (cleared >= 4) return '真実の追跡者';
+      if (cleared >= 1) return '見習い探偵';
+      return '一般人';
+    }
+
+    function renderNav() {
+      const items = [
+        { id: 'home', icon: '🏠', label: '事件簿' },
+        { id: 'list', icon: '📋', label: '一覧' },
+        { id: 'premium', icon: '🔮', label: '深淵' },
+        { id: 'settings', icon: '⚙️', label: '設定' }
+      ];
+      
+      return `
+        <nav class="nav">
+          ${items.map(item => `
+            <button class="nav-item ${state.currentPage === item.id ? 'active' : ''}" data-page="${item.id}">
+              <span class="nav-icon">${item.icon}</span>
+              ${item.label}
+            </button>
+          `).join('')}
+        </nav>
+      `;
+    }
+
+    function renderGame() {
+      const episode = state.currentEpisode;
+      const scene = episode.scenes[state.currentSceneIndex];
+      
+      let gameContent = '';
+      
+      switch(state.gamePhase) {
+        case 'intro':
+          gameContent = renderIntro(episode);
+          break;
+        case 'explore':
+          gameContent = renderExplore(episode, scene);
+          break;
+        case 'solve':
+          gameContent = renderSolve(episode);
+          break;
+        case 'result':
+          gameContent = renderResult(episode);
+          break;
+      }
+      
+      return `
+        <div style="min-height: 100vh; display: flex; flex-direction: column;">
+          <header class="game-header">
+            <button class="btn btn-secondary" onclick="exitGame()">戻る</button>
+            <h1 style="font-size: 0.9rem; font-weight: bold; margin: 0 0.5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #c9a55c;">${episode.title}</h1>
+            <button class="btn btn-secondary clue-btn" onclick="showClueList()">
+              手がかり
+              ${state.foundClues.length > 0 ? `<span class="clue-badge">${state.foundClues.length}</span>` : ''}
+            </button>
+          </header>
+          ${gameContent}
+        </div>
+        ${state.showModal ? renderModal() : ''}
+      `;
+    }
+
+    function renderIntro(episode) {
+      return `
+        <div class="intro-screen">
+          <div class="intro-icon">🔍</div>
+          <h2 style="font-size: 1.25rem; margin-bottom: 0.5rem; color: #c9a55c;">${episode.title}</h2>
+          <p style="color: #8a8070; font-size: 0.875rem;">${episode.subtitle}</p>
+          <p style="color: #6b0000; font-size: 0.75rem; margin-top: 0.5rem;">📍 ${episode.location}</p>
+          
+          <div class="intro-story">
+            <p style="line-height: 2;">${episode.intro}</p>
+          </div>
+          
+          <button class="btn btn-primary btn-full" onclick="startExplore()">
+            捜査を開始する
+          </button>
+        </div>
+      `;
+    }
+
+    function renderExplore(episode, scene) {
+      const totalClues = episode.clues.length;
+      const foundCount = state.foundClues.length;
+      const canSolve = foundCount >= Math.ceil(totalClues * 0.6);
+      
+      return `
+        <div class="scene-tabs">
+          ${episode.scenes.map((s, i) => `
+            <button class="scene-tab ${i === state.currentSceneIndex ? 'active' : ''}" data-scene="${i}">
+              ${s.name}
+            </button>
+          `).join('')}
+        </div>
+        
+        <div class="explore-scene">
+          <div class="scene-label">${scene.name}</div>
+          
+          ${scene.areas.map(area => {
+            const found = area.clueId && state.foundClues.includes(area.clueId);
+            const style = `top: ${area.top || 'auto'}; bottom: ${area.bottom || 'auto'}; left: ${area.left || 'auto'}; right: ${area.right || 'auto'};`;
+            return `
+              <div class="area-point ${found ? 'discovered' : 'undiscovered'}" style="${style}" data-area="${area.id}">
+                ${found ? '✓' : '?'}
+              </div>
+            `;
+          }).join('')}
+          
+          <div class="scene-description">
+            <p style="color: #8a8070; font-size: 0.875rem;">${scene.description}</p>
+          </div>
+        </div>
+        
+        <div class="progress-section">
+          <div class="progress-info">
+            <span>収集した手がかり</span>
+            <span>${foundCount} / ${totalClues}</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: ${(foundCount / totalClues) * 100}%"></div>
+          </div>
+          
+          <button class="btn btn-primary btn-full" ${!canSolve ? 'disabled' : ''} onclick="startSolve()">
+            ${canSolve ? '推理を開始する' : `あと${Math.ceil(totalClues * 0.6) - foundCount}個の手がかりが必要`}
+          </button>
+        </div>
+      `;
+    }
+
+    function renderSolve(episode) {
+      return `
+        <div style="flex: 1; padding: 1rem; overflow-y: auto; padding-bottom: 100px;">
+          <div class="card">
+            <div class="chapter-mark">〜 推理編 〜</div>
+            <h3 style="font-size: 1.125rem; margin-bottom: 1rem; color: #c9a55c; text-align: center;">
+              ${episode.finalQuestion}
+            </h3>
+            
+            <div style="margin-top: 1rem;">
+              ${episode.choices.map((choice, i) => `
+                <button class="choice-btn ${state.selectedAnswer === i ? 'selected' : ''}" data-choice="${i}">
+                  ${choice}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+          
+          <button class="btn btn-primary btn-full" ${state.selectedAnswer === null ? 'disabled' : ''} onclick="submitAnswer()">
+            推理を確定する
+          </button>
+        </div>
+      `;
+    }
+
+    function renderResult(episode) {
+      const isCorrect = state.selectedAnswer === episode.correctAnswer;
+      
+      return `
+        <div style="flex: 1; padding: 1rem; overflow-y: auto; padding-bottom: 100px;">
+          <div class="card ${isCorrect ? 'result-correct' : 'result-wrong'}">
+            <div style="text-align: center; margin-bottom: 1rem;">
+              <div style="font-size: 3rem; margin-bottom: 0.5rem;">${isCorrect ? '🎉' : '❌'}</div>
+              <h3 style="font-size: 1.25rem; color: ${isCorrect ? '#90ee90' : '#ff6b6b'};">
+                ${isCorrect ? '事件解決！' : '推理失敗...'}
+              </h3>
+            </div>
+            
+            <p style="text-align: center; color: #8a8070; margin-bottom: 1rem;">
+              ${isCorrect ? '見事、真犯人を見抜きました。' : '残念、真相は違いました。闇はまだ深い...'}
+            </p>
+          </div>
+          
+          <div class="card">
+            <div class="chapter-mark">〜 解決編 〜</div>
+            <div class="solution-text">
+              ${episode.solution}
+            </div>
+          </div>
+          
+          <button class="btn btn-primary btn-full" onclick="exitGame()">
+            事件簿に戻る
+          </button>
+        </div>
+      `;
+    }
+
+    function renderModal() {
+      if (state.showModal === 'clue-found') {
+        const clue = state.modalData;
+        return `
+          <div class="modal-overlay" onclick="closeModal(event)">
+            <div class="modal">
+              <h3 class="modal-title">💡 手がかり発見！</h3>
+              <div style="margin-bottom: 1rem;">
+                <p style="color: #c9a55c; font-weight: bold; margin-bottom: 0.5rem;">${clue.name}</p>
+                <p style="color: #8a8070; line-height: 1.8;">${clue.description}</p>
+              </div>
+              <button class="btn btn-primary btn-full" onclick="state.showModal = null; render();">
+                閉じる
+              </button>
+            </div>
+          </div>
+        `;
+      }
+      
+      if (state.showModal === 'message') {
+        return `
+          <div class="modal-overlay" onclick="closeModal(event)">
+            <div class="modal">
+              <h3 class="modal-title">🔎 調査結果</h3>
+              <p style="color: #8a8070; line-height: 1.8; margin-bottom: 1rem;">${state.modalData}</p>
+              <button class="btn btn-primary btn-full" onclick="state.showModal = null; render();">
+                閉じる
+              </button>
+            </div>
+          </div>
+        `;
+      }
+      
+      if (state.showModal === 'clue-list') {
+        const episode = state.currentEpisode;
+        const foundClueObjects = episode.clues.filter(c => state.foundClues.includes(c.id));
+        
+        return `
+          <div class="modal-overlay" onclick="closeModal(event)">
+            <div class="modal" style="max-height: 80vh;">
+              <h3 class="modal-title">📋 収集した手がかり</h3>
+              <div class="clue-list">
+                ${foundClueObjects.length > 0 ? foundClueObjects.map(clue => `
+                  <div class="clue-item">
+                    <div class="clue-name">${clue.name}</div>
+                    <p style="color: #8a8070; font-size: 0.875rem; line-height: 1.6;">${clue.description}</p>
+                  </div>
+                `).join('') : '<p style="color: #444; text-align: center; padding: 1rem;">まだ手がかりがありません</p>'}
+              </div>
+              <button class="btn btn-secondary btn-full" style="margin-top: 1rem;" onclick="state.showModal = null; render();">
+                閉じる
+              </button>
+            </div>
+          </div>
+        `;
+      }
+      
+      return '';
+    }
+
+    // ========== イベント処理 ==========
+    function attachEventListeners() {
+      // ナビゲーション
+      document.querySelectorAll('.nav-item').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.currentPage = btn.dataset.page;
+          render();
+        });
+      });
+      
+      // エピソード選択
+      document.querySelectorAll('.episode-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const episodeId = parseInt(card.dataset.episode);
+          const episode = episodes.find(e => e.id === episodeId);
+          
+          if (episode.premium) {
+            state.currentPage = 'premium';
+            render();
+            return;
+          }
+          
+          state.currentEpisode = episode;
+          state.gamePhase = 'intro';
+          state.foundClues = [];
+          state.selectedAnswer = null;
+          state.currentSceneIndex = 0;
+          render();
+        });
+      });
+      
+      // シーン切り替え
+      document.querySelectorAll('.scene-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          state.currentSceneIndex = parseInt(tab.dataset.scene);
+          render();
+        });
+      });
+      
+      // 調査ポイント
+      document.querySelectorAll('.area-point').forEach(point => {
+        point.addEventListener('click', () => {
+          const areaId = point.dataset.area;
+          const scene = state.currentEpisode.scenes[state.currentSceneIndex];
+          const area = scene.areas.find(a => a.id === areaId);
+          
+          if (area.clueId && !state.foundClues.includes(area.clueId)) {
+            state.foundClues.push(area.clueId);
+            const clue = state.currentEpisode.clues.find(c => c.id === area.clueId);
+            state.showModal = 'clue-found';
+            state.modalData = clue;
+          } else if (area.message) {
+            state.showModal = 'message';
+            state.modalData = area.message;
+          } else if (area.clueId) {
+            state.showModal = 'message';
+            state.modalData = 'この場所は既に調査済みです。';
+          }
+          render();
+        });
+      });
+      
+      // 選択肢
+      document.querySelectorAll('.choice-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.selectedAnswer = parseInt(btn.dataset.choice);
+          render();
+        });
+      });
+    }
+
+    // ========== ゲーム制御 ==========
+    function startExplore() {
+      state.gamePhase = 'explore';
+      render();
+    }
+
+    function startSolve() {
+      state.gamePhase = 'solve';
+      render();
+    }
+
+    function submitAnswer() {
+      const isCorrect = state.selectedAnswer === state.currentEpisode.correctAnswer;
+      
+      if (isCorrect && !state.completedEpisodes.includes(state.currentEpisode.id)) {
+        state.completedEpisodes.push(state.currentEpisode.id);
+        localStorage.setItem('completedEpisodes', JSON.stringify(state.completedEpisodes));
+      }
+      
+      state.gamePhase = 'result';
+      render();
+    }
+
+    function exitGame() {
+      state.currentEpisode = null;
+      state.gamePhase = 'intro';
+      state.foundClues = [];
+      state.selectedAnswer = null;
+      render();
+    }
+
+    function showClueList() {
+      state.showModal = 'clue-list';
+      render();
+    }
+
+    function closeModal(event) {
+      if (event.target.classList.contains('modal-overlay')) {
+        state.showModal = null;
+        render();
+      }
+    }
+
+    function resetProgress() {
+      if (confirm('本当に進行状況をリセットしますか？')) {
+        state.completedEpisodes = [];
+        localStorage.removeItem('completedEpisodes');
+        render();
+      }
+    }
+
+    // ========== 初期化 ==========
+    render();
+  </script>
+</body>
+</html>
