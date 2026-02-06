@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0d0d0d">
+  <title>深淵の探偵録 - 本格推理ゲーム</title>
+  <meta name="description" content="日本各地の因習や伝承をモチーフにしたオリジナル推理ゲーム。手がかりを集め、真犯人を見つけ出せ。コミュニティで考察を共有し、新たな事件を投稿しよう。">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Hiragino Mincho ProN','Yu Mincho','MS Mincho',serif;background:#0d0d0d;color:#e8e4d9;min-height:100vh;line-height:1.8;font-size:16px}
+
+    /* Header */
+    .header{background:linear-gradient(to bottom,#1a0a0a,#0d0d0d);text-align:center;padding:2rem 1rem;border-bottom:2px solid #6b0000;position:relative;overflow:hidden}
+    .header::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(107,0,0,.2) 0%,transparent 70%);pointer-events:none}
+    .header h1{font-size:1.6rem;font-weight:bold;margin-bottom:.25rem;color:#c9a55c;text-shadow:2px 2px 8px rgba(107,0,0,.8);letter-spacing:.2em;position:relative}
+    .header p{color:#8a8070;font-size:.875rem;letter-spacing:.1em;position:relative}
+
+    /* Game Header */
+    .game-header{background:linear-gradient(to bottom,#1a0a0a,#0d0d0d);padding:.75rem 1rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #3d1515}
+
+    /* Buttons */
+    .btn{padding:.75rem 1rem;border:none;border-radius:.5rem;font-size:1rem;cursor:pointer;min-height:48px;transition:all .2s;font-family:inherit}
+    .btn:active{transform:scale(.98)}
+    .btn-primary{background:linear-gradient(to bottom,#6b0000,#3d0000);color:#e8e4d9;border:1px solid #8b2020;box-shadow:0 4px 15px rgba(107,0,0,.4)}
+    .btn-primary:hover{box-shadow:0 4px 20px rgba(107,0,0,.6)}
+    .btn-secondary{background:linear-gradient(to bottom,#2d1515,#1a0a0a);color:#c9a55c;border:1px solid #3d1515}
+    .btn-danger{background:#3d0000;color:#fff;border:1px solid #6b0000}
+    .btn-amber{background:linear-gradient(to bottom,#8b6914,#5c4510);color:#fff;border:1px solid #c9a55c;box-shadow:0 4px 15px rgba(201,165,92,.3)}
+    .btn-full{width:100%;padding:1rem;font-weight:bold;font-size:1.125rem}
+    .btn:disabled{background:#1a0a0a;color:#444;cursor:not-allowed;border-color:#2d1515;box-shadow:none}
+
+    /* Cards */
+    .card{background:linear-gradient(to bottom,#1a0a0a,#120808);border-radius:.5rem;padding:1.25rem;margin-bottom:1rem;border:1px solid #3d1515;box-shadow:0 4px 20px rgba(0,0,0,.6)}
+    .card-title{font-size:1.125rem;font-weight:bold;margin-bottom:1rem;color:#c9a55c;border-bottom:1px solid #3d1515;padding-bottom:.5rem}
+
+    /* Episode Cards */
+    .episode-card{background:linear-gradient(135deg,#1a0a0a 0%,#0d0d0d 100%);border-radius:.5rem;padding:1.25rem;margin-bottom:.75rem;cursor:pointer;transition:all .3s;border:1px solid #3d1515;position:relative;overflow:hidden}
+    .episode-card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(to right,#6b0000,transparent)}
+    .episode-card::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at top right,rgba(107,0,0,.1) 0%,transparent 50%);pointer-events:none}
+    .episode-card:active{transform:scale(.98);border-color:#6b0000;box-shadow:0 0 20px rgba(107,0,0,.3)}
+    .episode-card.premium{background:linear-gradient(135deg,#1a0f05 0%,#0d0d0d 100%)}
+    .episode-card.premium::before{background:linear-gradient(to right,#8b6914,transparent)}
+    .premium-badge{position:absolute;top:.5rem;right:.5rem;background:linear-gradient(to right,#8b6914,#c9a55c);color:#0d0d0d;font-size:.625rem;padding:.25rem .5rem;border-radius:.25rem;font-weight:bold}
+    .episode-title{font-size:1.125rem;font-weight:bold;margin-bottom:.25rem;color:#e8e4d9}
+    .episode-subtitle{color:#8a8070;font-size:.875rem}
+    .episode-location{color:#6b0000;font-size:.75rem;margin-top:.5rem;display:flex;align-items:center;gap:.25rem}
+    .badge{display:inline-block;font-size:.75rem;padding:.25rem .75rem;border-radius:.25rem;margin-bottom:.5rem;margin-right:.25rem}
+    .badge-free{background:#1a2a1a;color:#6b8b6b;border:1px solid #2a4a2a}
+    .badge-clear{background:#0a1a2a;color:#6b8bab;border:1px solid #1a3a5a}
+
+    /* Bottom Nav */
+    .nav{position:fixed;bottom:0;left:0;right:0;background:linear-gradient(to top,#0d0d0d,#1a0a0a);display:flex;justify-content:space-around;padding:.5rem 0;border-top:2px solid #6b0000;z-index:50}
+    .nav-item{display:flex;flex-direction:column;align-items:center;padding:.5rem .75rem;color:#444;cursor:pointer;border:none;background:none;font-size:.7rem;min-width:50px;font-family:inherit;transition:color .2s}
+    .nav-item.active{color:#c9a55c}
+    .nav-icon{font-size:1.3rem;margin-bottom:.25rem}
+
+    /* Explore */
+    .explore-scene{min-height:380px;position:relative;background:linear-gradient(to bottom,#1a0a0a,#0d0d0d);border-bottom:1px solid #3d1515;overflow:hidden}
+    .explore-scene::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 20% 30%,rgba(107,0,0,.15) 0%,transparent 40%),radial-gradient(ellipse at 80% 70%,rgba(107,0,0,.1) 0%,transparent 40%);pointer-events:none}
+    .scene-label{position:absolute;top:1rem;left:1rem;background:rgba(107,0,0,.9);padding:.5rem 1rem;border-radius:.25rem;font-weight:bold;font-size:.875rem;border:1px solid #8b2020;z-index:10}
+    .area-point{position:absolute;width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.5rem;cursor:pointer;transition:transform .2s;z-index:5;border:none;background:none}
+    .area-point:active{transform:scale(.9)}
+    .area-point.undiscovered{background:rgba(107,0,0,.3);border:2px solid #6b0000;animation:pulse 2s infinite}
+    .area-point.discovered{background:rgba(34,80,34,.3);border:2px solid #228b22}
+    @keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 10px rgba(107,0,0,.5),inset 0 0 10px rgba(107,0,0,.2)}50%{opacity:.6;box-shadow:0 0 25px rgba(107,0,0,.8),inset 0 0 15px rgba(107,0,0,.4)}}
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+    .scene-description{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(to top,rgba(13,13,13,.98),transparent);padding:4rem 1rem 1rem}
+    .scene-tabs{display:flex;gap:.5rem;padding:.75rem;background:#1a0a0a;overflow-x:auto;border-bottom:1px solid #3d1515}
+    .scene-tab{padding:.5rem 1rem;border-radius:.25rem;background:#2d1515;border:1px solid #3d1515;color:#8a8070;cursor:pointer;white-space:nowrap;font-size:.875rem;font-family:inherit;transition:all .2s}
+    .scene-tab.active{background:#6b0000;color:#e8e4d9;border-color:#8b2020}
+
+    /* Progress bar */
+    .progress-section{padding:1rem;border-bottom:1px solid #3d1515;background:#1a0a0a}
+    .progress-bar{height:8px;background:#2d1515;border-radius:4px;overflow:hidden;margin-bottom:1rem}
+    .progress-fill{height:100%;background:linear-gradient(to right,#6b0000,#8b2020);box-shadow:0 0 10px rgba(107,0,0,.5);transition:width .3s}
+    .progress-text{display:flex;justify-content:space-between;font-size:.875rem;color:#8a8070;margin-bottom:.5rem}
+
+    /* Modal */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.95);display:flex;align-items:center;justify-content:center;z-index:100;padding:1rem}
+    .modal-content{background:linear-gradient(to bottom,#1a0a0a,#0d0d0d);border-radius:.5rem;padding:1.5rem;max-width:400px;width:100%;border:2px solid #6b0000;box-shadow:0 0 50px rgba(107,0,0,.4);max-height:85vh;overflow-y:auto}
+
+    /* Choices */
+    .choice-btn{width:100%;text-align:left;padding:1rem;margin-bottom:.75rem;background:#2d1515;border:2px solid #3d1515;border-radius:.5rem;color:#e8e4d9;cursor:pointer;font-family:inherit;font-size:1rem;line-height:1.6;transition:all .2s}
+    .choice-btn.selected{border-color:#6b0000;background:rgba(107,0,0,.3);box-shadow:0 0 15px rgba(107,0,0,.3)}
+    .choice-btn:hover{border-color:#6b0000}
+
+    /* Result */
+    .result-correct{border:2px solid #228b22;background:rgba(34,80,34,.2);border-radius:.5rem;padding:1.5rem;text-align:center;margin-bottom:1rem}
+    .result-wrong{border:2px solid #6b0000;background:rgba(107,0,0,.2);border-radius:.5rem;padding:1.5rem;text-align:center;margin-bottom:1rem}
+    .result-icon{font-size:3rem;margin-bottom:.5rem}
+    .solution-box{white-space:pre-line;line-height:1.8;font-size:.95rem}
+
+    /* Content area */
+    .main-content{max-width:600px;margin:0 auto;padding:0 1rem 5rem}
+    .hidden{display:none !important}
+
+    /* Community */
+    .filter-chips{display:flex;gap:.5rem;overflow-x:auto;padding-bottom:.5rem;margin-bottom:1rem}
+    .chip{padding:.5rem 1rem;border-radius:99px;font-size:.875rem;cursor:pointer;white-space:nowrap;border:1px solid #3d1515;background:#2d1515;color:#8a8070;font-family:inherit;transition:all .2s}
+    .chip.active{background:#6b0000;color:#e8e4d9;border-color:#8b2020}
+
+    .theory-card{background:linear-gradient(to bottom,#1a0a0a,#120808);border-radius:.5rem;padding:1rem;margin-bottom:.75rem;border:1px solid #3d1515}
+    .theory-header{display:flex;gap:.75rem;align-items:flex-start;margin-bottom:.75rem}
+    .avatar{width:40px;height:40px;border-radius:50%;background:#6b0000;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:.875rem;flex-shrink:0}
+    .avatar-amber{background:#8b6914}
+    .theory-meta{flex:1}
+    .theory-author{font-weight:bold;font-size:.875rem}
+    .theory-time{font-size:.75rem;color:#8a8070}
+    .theory-episode{font-size:.75rem;color:#6b0000}
+    .theory-content{line-height:1.8;font-size:.9rem;margin-bottom:.75rem}
+    .theory-actions{display:flex;gap:1rem;padding-top:.75rem;border-top:1px solid #3d1515;font-size:.875rem;color:#8a8070}
+    .theory-action{display:flex;align-items:center;gap:.4rem;cursor:pointer;background:none;border:none;color:inherit;font-family:inherit;font-size:inherit;transition:color .2s}
+    .theory-action.liked{color:#c44}
+    .spoiler-cover{background:#2d2010;border:1px solid #5c4510;border-radius:.5rem;padding:1rem;text-align:center;cursor:pointer}
+    .spoiler-cover p{color:#c9a55c;font-size:.875rem}
+
+    /* Submission */
+    .step-flow{display:flex;flex-direction:column;gap:.25rem;margin-bottom:1.5rem}
+    .step-item{display:flex;align-items:flex-start;gap:.75rem}
+    .step-icon{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1px solid #6b0000;background:rgba(107,0,0,.2);flex-shrink:0;font-size:1.2rem}
+    .step-connector{width:1px;height:24px;background:#3d1515;margin-left:20px}
+    .step-text h4{font-size:.875rem;font-weight:bold;color:#e8e4d9}
+    .step-text p{font-size:.75rem;color:#8a8070}
+
+    .submission-card{border-radius:.5rem;padding:1rem;margin-bottom:.75rem;border:1px solid #3d1515;background:linear-gradient(to bottom,#1a0a0a,#120808);display:flex;gap:.75rem}
+    .submission-card.featured{border-color:#5c4510;background:linear-gradient(to bottom,#1a0f05,#0d0d0d)}
+    .submission-card.approved{border-color:#2a4a2a;background:linear-gradient(to bottom,#0d1a0d,#0d0d0d)}
+    .vote-box{display:flex;flex-direction:column;align-items:center;gap:.25rem;padding:.5rem;border-radius:.5rem;cursor:pointer;transition:all .2s;min-width:48px;background:#2d1515;border:none;font-family:inherit;color:#8a8070}
+    .vote-box.voted{background:#6b0000;color:#e8e4d9}
+    .vote-count{font-weight:bold;font-size:.875rem}
+    .submission-info{flex:1;min-width:0}
+    .submission-status{font-size:.75rem;font-weight:bold}
+    .status-featured{color:#c9a55c}
+    .status-approved{color:#6b8b6b}
+    .status-reviewing{color:#8a8070}
+    .submission-title{font-weight:bold;margin:.25rem 0;font-size:.95rem}
+    .submission-subtitle{font-size:.85rem;color:#8a8070}
+    .submission-meta{display:flex;gap:.75rem;margin-top:.5rem;font-size:.75rem;color:#8a8070}
+    .submission-location{color:#6b0000}
+
+    /* Profile */
+    .profile-card{position:relative;overflow:hidden;border-radius:.5rem;padding:1.5rem;border:1px solid #3d1515;background:linear-gradient(to bottom,#1a0a0a,#120808);text-align:center}
+    .profile-card::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at top right,rgba(107,0,0,.15) 0%,transparent 50%);pointer-events:none}
+    .profile-icon{width:80px;height:80px;border-radius:50%;border:2px solid #c9a55c;background:linear-gradient(to bottom,#6b0000,#3d0000);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;font-size:2.5rem;position:relative}
+    .rank-name{font-size:1.25rem;font-weight:bold;color:#c9a55c;position:relative}
+    .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1rem}
+    .stat-card{border-radius:.5rem;padding:1rem;border:1px solid #3d1515;background:#1a0a0a}
+    .stat-icon{font-size:1.2rem;margin-bottom:.5rem}
+    .stat-label{font-size:.75rem;color:#8a8070}
+    .stat-value{font-size:1.125rem;font-weight:bold}
+
+    .rank-item{display:flex;align-items:center;gap:.75rem;padding:.75rem;border-radius:.5rem;margin-bottom:.5rem}
+    .rank-item.current{border:1px solid rgba(201,165,92,.3);background:rgba(201,165,92,.1)}
+    .rank-item.achieved{background:#1a1510}
+    .rank-icon-box{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.2rem}
+    .rank-icon-box.active{background:#c9a55c;color:#0d0d0d}
+    .rank-icon-box.inactive{background:#2d1515;color:#8a8070}
+    .rank-info{flex:1}
+    .rank-info h4{font-size:.875rem;font-weight:bold}
+    .rank-info p{font-size:.75rem;color:#8a8070}
+    .rank-badge{background:#c9a55c;color:#0d0d0d;font-size:.7rem;padding:.2rem .5rem;border-radius:.25rem;font-weight:bold}
+
+    .premium-section{border-radius:.5rem;padding:1.25rem;border:1px solid rgba(201,165,92,.3);background:linear-gradient(to bottom,#1a0f05,#0d0d0d);text-align:center;margin-bottom:1rem}
+    .premium-section h3{font-size:1.125rem;font-weight:bold;color:#c9a55c;margin-bottom:.5rem}
+    .premium-feature{display:flex;align-items:center;gap:.5rem;text-align:left;margin-bottom:.5rem;font-size:.875rem}
+    .premium-dot{width:6px;height:6px;border-radius:50%;background:#c9a55c;flex-shrink:0}
+
+    .text-area{width:100%;padding:.75rem;background:#2d1515;border:1px solid #3d1515;border-radius:.5rem;color:#e8e4d9;font-family:inherit;font-size:.875rem;line-height:1.8;resize:none}
+    .text-area:focus{border-color:#c9a55c;outline:none}
+    .text-area::placeholder{color:#555}
+    .input-field{width:100%;padding:.75rem;background:#2d1515;border:1px solid #3d1515;border-radius:.5rem;color:#e8e4d9;font-family:inherit;font-size:.875rem}
+    .input-field:focus{border-color:#c9a55c;outline:none}
+    .input-field::placeholder{color:#555}
+
+    .sort-btns{display:flex;gap:.5rem;margin-bottom:.75rem}
+    .sort-btn{padding:.4rem .75rem;border-radius:.25rem;font-size:.8rem;cursor:pointer;border:none;font-family:inherit;background:#2d1515;color:#8a8070;transition:all .2s}
+    .sort-btn.active{background:#6b0000;color:#e8e4d9}
+
+    /* Warning */
+    .warning-box{border-radius:.5rem;border:1px solid #6b0000;background:rgba(107,0,0,.15);padding:1rem;text-align:center;margin-bottom:1rem}
+    .warning-box p{font-size:.875rem;color:#8b4040}
+
+    /* Section header */
+    .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem}
+    .section-title{display:flex;align-items:center;gap:.5rem;font-size:1.125rem;font-weight:bold;color:#c9a55c}
+    .section-link{color:#6b0000;font-size:.875rem;cursor:pointer;background:none;border:none;font-family:inherit;display:flex;align-items:center;gap:.25rem}
+
+    /* CTA community */
+    .community-cta{display:flex;align-items:center;gap:1rem;margin-bottom:1rem}
+    .cta-icon{width:56px;height:56px;border-radius:50%;background:#6b0000;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.5rem}
+    .cta-btns{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:1rem}
+
+    /* Intro screen */
+    .intro-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:70vh;padding:2rem;text-align:center}
+    .intro-icon{font-size:4rem;margin-bottom:1rem;animation:float 3s ease-in-out infinite;text-shadow:0 0 30px rgba(107,0,0,.8)}
+
+    .clue-badge{position:absolute;top:-8px;right:-8px;background:#6b0000;color:#e8e4d9;font-size:.65rem;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #1a0a0a}
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script>
+  // ===== DATA =====
+  const episodes = [
+    {
+      id:1,title:"血染めの祠",subtitle:"八人の怨霊が蘇る夜",location:"岡山県・霧深村",premium:false,
+      intro:"山奥の寒村「霧深村」で、旧家・朱鷺田家の当主が惨殺された。村には四百年前、落武者八人を皆殺しにした血塗られた歴史がある。「祟りじゃ...八人の怨霊が蘇ったのじゃ...」村人たちは恐怖に震える。そして二人目の犠牲者が出た夜、あなたは闇の中に人影を見た——それは、死んだはずの男だった。",
+      scenes:[
+        {id:"main-house",name:"朱鷺田家本邸",description:"築二百年の古い屋敷。廊下を歩くたび、床が不気味に軋む。どこからか、すすり泣くような声が聞こえる。",areas:[
+          {id:"tokonoma",name:"床の間",top:"20%",left:"15%",clueId:"scroll"},
+          {id:"fusuma",name:"血染めの襖",top:"35%",right:"15%",clueId:"blood-mark"},
+          {id:"irori",name:"囲炉裏",bottom:"35%",left:"40%",clueId:"ash"},
+          {id:"butsudan",name:"仏壇",top:"15%",right:"40%",message:"八人の落武者を弔う位牌。最近、一つだけ位置がずれている。誰かが触った？"}
+        ]},
+        {id:"storehouse",name:"土蔵",description:"代々の家宝が眠る土蔵。扉を開けた瞬間、腐臭が鼻をついた。",areas:[
+          {id:"chest",name:"古い長持",top:"25%",left:"20%",clueId:"diary"},
+          {id:"katana",name:"刀架",top:"40%",right:"20%",clueId:"missing-sword"},
+          {id:"door",name:"土蔵の扉",bottom:"25%",left:"45%",clueId:"lock-inside"},
+          {id:"window",name:"小窓",top:"15%",left:"50%",message:"人が通れないほど小さい。しかし窓枠に新しい擦り傷がある。"}
+        ]},
+        {id:"shrine",name:"八人塚",description:"四百年前に殺された八人の落武者を祀る塚。今夜、塚から青白い炎が立ち上がるのを複数の村人が目撃している。",areas:[
+          {id:"grave",name:"塚",top:"30%",left:"40%",clueId:"disturbed-soil"},
+          {id:"tree",name:"御神木",top:"20%",right:"25%",clueId:"carved-mark"},
+          {id:"path",name:"獣道",bottom:"30%",left:"20%",clueId:"footprint"},
+          {id:"offering",name:"供物台",bottom:"25%",right:"35%",message:"真新しい供物——まだ湯気が立っている。誰かがついさっきここにいた。"}
+        ]}
+      ],
+      clues:[
+        {id:"scroll",name:"血の契約書",description:"「八人の血を継ぐ者、災いを招く」と記された四百年前の文書。朱鷺田家の先祖が落武者を殺し、その財宝を奪った記録だった。"},
+        {id:"blood-mark",name:"血の手形",description:"襖に残された血の手形。しかし被害者の手よりも明らかに小さい。女性、あるいは——子供のもの？"},
+        {id:"ash",name:"囲炉裏の灰",description:"囲炉裏の灰の中から、燃え残った紙片を発見。「遺言状」「真の相続人は」という文字が辛うじて読み取れる。"},
+        {id:"diary",name:"当主の日記",description:"「あの子だけには真実を伝えねばならぬ。家督を譲る決意を固めたことを」——最後のページは破り取られていた。"},
+        {id:"missing-sword",name:"消えた脇差",description:"刀架から脇差が一本消えている。鞘だけが残され、刀身には被害者の血が付着しているはずだ。"},
+        {id:"lock-inside",name:"内側からの施錠",description:"土蔵の扉は内側から閂がかけられていた。完全な密室——しかし被害者は確かに中で死んでいた。"},
+        {id:"disturbed-soil",name:"掘り返された土",description:"塚の土が最近掘り返された形跡。土の中から、四百年前のものではない——真新しい骨が見えている。"},
+        {id:"carved-mark",name:"刻まれた印",description:"御神木に新しく刻まれた「×」の印。村の古老によれば、これは「次の標的」を示す呪いの印だという。"},
+        {id:"footprint",name:"足跡",description:"獣道に残された草履の跡。しかし歩幅が異様に広い。まるで何かを引きずりながら、急いで歩いたような——"}
+      ],
+      finalQuestion:"霧深村の惨劇。真犯人は誰か、そしてその動機は何か。",
+      choices:["当主の弟・辰夫（莫大な遺産を独り占めするため）","村の巫女・お鶴（落武者の末裔として四百年の復讐を果たすため）","当主の養子・健一（遺産分配を阻止し全財産を独占するため）","村長・源三郎（村の暗い歴史を永遠に葬り去るため）"],
+      correctAnswer:2,
+      solution:"犯人は当主の養子・健一です。\n\n【真相】\n健一は幼い頃に養子として引き取られ、当主に実の子のように育てられました。しかし当主は最近、遺言状で財産を弟の辰夫にも分配する決意を固めていました。健一はこれを知り、全財産を独占するために当主を殺害したのです。\n\n密室トリックの種明かし：土蔵の小窓から細い紐を通し、閂に結んで外から施錠。擦り傷はその時についたもの。\n\n血の手形の正体：健一の恋人——彼女は共犯者として現場にいました。彼女の小さな手が、血の手形となって残されたのです。\n\n掘り返された塚：そこには新しい遺言状が埋められていました。「祟り」という村の因習を利用し、自らの犯行を覆い隠そうとした——それが健一の計画でした。"
+    },
+    {
+      id:2,title:"湖底の遺言",subtitle:"沈黙の湖が語る秘密",location:"信州・深霧湖畔",premium:false,
+      intro:"信州の豪商・神崎家の当主が遺した奇妙な遺言状。「湖底に沈めた秘密を最初に見つけた者に全財産を与える」——やがて湖畔の屋敷で、相続候補の一人が溺死体で発見された。月明かりの湖面に浮かぶ顔、握りしめられた泥だらけの手。この不可解な殺人の真相とは。",
+      scenes:[
+        {id:"mansion",name:"神崎家本邸",description:"湖を見下ろす高台に建つ洋館。夜になると、どこからか女のすすり泣きが聞こえるという。",areas:[
+          {id:"safe",name:"金庫室",top:"20%",left:"20%",clueId:"will"},
+          {id:"portrait",name:"肖像画",top:"25%",right:"15%",clueId:"portrait-secret"},
+          {id:"phone",name:"電話室",bottom:"30%",left:"15%",clueId:"call-record"},
+          {id:"window2",name:"窓",top:"15%",left:"50%",message:"窓から湖が一望できる。事件当夜、湖面に青白い人影が立っているのを使用人が見たという。"}
+        ]},
+        {id:"lake",name:"深霧湖畔",description:"死体が発見された湖畔。葦が生い茂り、霧が立ち込める。水の底には何かが沈んでいる。",areas:[
+          {id:"dock",name:"桟橋",top:"30%",left:"35%",clueId:"boat-rope"},
+          {id:"reeds",name:"葦原",top:"40%",right:"20%",clueId:"torn-cloth"},
+          {id:"footprints2",name:"足跡",bottom:"35%",left:"25%",clueId:"two-prints"},
+          {id:"water",name:"水面",top:"20%",right:"40%",message:"澄んだ水。しかし霧の夜には、溺死した女の顔が浮かぶという伝説がある。"}
+        ]},
+        {id:"annex",name:"離れ",description:"相続候補たちが滞在していた建物。事件当夜、全員が自室にいたと主張している。しかし——",areas:[
+          {id:"room1",name:"長男・清司の部屋",top:"25%",left:"15%",clueId:"diving-gear"},
+          {id:"room2",name:"次男・武彦の部屋",top:"35%",right:"20%",clueId:"debt-note"},
+          {id:"room3",name:"三男・智也の部屋",bottom:"30%",left:"40%",clueId:"letter"},
+          {id:"hallway",name:"廊下",bottom:"25%",right:"30%",message:"深夜二時、誰かが廊下を歩く足音を使用人が聞いている。そして、水の滴る音も。"}
+        ]}
+      ],
+      clues:[
+        {id:"will",name:"遺言状",description:"「湖底の金庫を開けた者に全遺産を相続させる。暗証番号は私と共に沈んだ」——当主は何を隠したかったのか。"},
+        {id:"portrait-secret",name:"肖像画の裏",description:"先代当主の肖像画の裏に、隠し部屋への扉を発見。中には古い日記と、見知らぬ女性の写真が。"},
+        {id:"call-record",name:"通話記録",description:"事件当夜、東京への長距離電話。相手は探偵事務所——誰かの身辺調査を依頼していた。"},
+        {id:"boat-rope",name:"舟の綱",description:"桟橋の綱が新しく結び直されている。結び方は船乗りのものではない——医者が使う外科結びだ。"},
+        {id:"torn-cloth",name:"破れた布",description:"葦原に引っかかっていた高級な着物の切れ端。裏には「神崎」の家紋が刺繍されていた。"},
+        {id:"two-prints",name:"二人分の足跡",description:"湖畔に残る二人分の足跡。行きは二人、帰りは一人。そして、何かを引きずった跡。"},
+        {id:"diving-gear",name:"潜水道具",description:"清司の部屋から発見された潜水用具。最近使用された形跡があり、泥がついている。"},
+        {id:"debt-note",name:"借用書",description:"武彦が闇金融から借りた多額の借金。期限は明後日——払えなければ命はない。"},
+        {id:"letter",name:"脅迫状",description:"智也宛の脅迫状。「お前の秘密を知っている。黙っていてほしければ金を用意しろ」——差出人不明。"}
+      ],
+      finalQuestion:"湖畔の溺死体。この不可解な殺人の犯人は誰か。",
+      choices:["武彦（借金返済のため遺産を狙った）","智也（脅迫者を排除するため）","清司（湖底の秘密を独占するため）","屋敷の執事・田村（主人への復讐）"],
+      correctAnswer:2,
+      solution:"真犯人は長男・清司です。\n\n【真相】\n清司は密かに潜水の訓練を受けており、湖底に沈められた金庫の場所を既に特定していました。被害者はそれに気づき、清司を脅迫しようとしたため殺害されました。\n\n事件の夜、清司は被害者を「湖底の秘密を教える」と言って湖畔に誘い出し、舟に乗せました。湖の中央で被害者を水中に突き落とし、溺死させたのです。\n\n二人分の足跡は、被害者を湖畔に連れ出した証拠。帰りが一人なのは犯人が舟で別の場所から戻ったから。外科結びの綱——清司は元々医学生で、その知識を使いました。\n\n潜水道具の泥は、犯行後に証拠を湖底に沈めた際についたものでした。"
+    },
+    {
+      id:3,title:"鬼哭島",subtitle:"灯台守の最期の告白",location:"瀬戸内海・鬼哭島",premium:false,
+      intro:"瀬戸内海に浮かぶ孤島・鬼哭島。古い灯台守の男が「この島には呪われた宝が眠っている」と遺言を残して死んだ。彼の言葉を聞きつけ、宝を求めて島に上陸した五人の男女。しかし一人、また一人と不可解な死を遂げていく。",
+      scenes:[
+        {id:"lighthouse",name:"灯台",description:"島の最高地点に立つ古い灯台。夜な夜な、誰もいないはずの灯台から光が点滅するという。",areas:[
+          {id:"top",name:"灯室",top:"20%",left:"30%",clueId:"light-signal"},
+          {id:"room",name:"灯台守の部屋",top:"35%",right:"20%",clueId:"first-victim"},
+          {id:"storage",name:"倉庫",bottom:"30%",left:"20%",clueId:"old-map"},
+          {id:"stairs",name:"螺旋階段",bottom:"25%",right:"30%",message:"百段以上ある螺旋階段。途中、一段だけ新しく補修されている。"}
+        ]},
+        {id:"village",name:"廃村",description:"かつて漁師たちが暮らしていた集落。今は廃墟と化し、朽ちた家々が並ぶ。",areas:[
+          {id:"well",name:"古井戸",top:"25%",left:"15%",clueId:"hidden-passage"},
+          {id:"shrine2",name:"朽ちた社",top:"40%",right:"25%",clueId:"second-victim"},
+          {id:"dock2",name:"船着場",bottom:"35%",left:"40%",clueId:"sabotaged-boat"},
+          {id:"cellar",name:"地下室",top:"15%",right:"15%",message:"廃屋の地下から、金属を引っ掻くような音が聞こえる。"}
+        ]},
+        {id:"cave",name:"海蝕洞",description:"島の断崖にある洞窟。満潮時には完全に水没する危険な場所。",areas:[
+          {id:"entrance",name:"洞窟入口",top:"30%",left:"20%",clueId:"tide-table"},
+          {id:"deep",name:"洞窟奥",top:"35%",right:"15%",clueId:"treasure-chest"},
+          {id:"pool",name:"潮溜まり",bottom:"30%",left:"35%",clueId:"third-victim"},
+          {id:"crack",name:"岩の裂け目",bottom:"25%",right:"25%",clueId:"escape-route"}
+        ]}
+      ],
+      clues:[
+        {id:"light-signal",name:"灯台の信号",description:"灯台から発せられていた光は、モールス信号だった。解読すると「タカラハワナ（宝は罠）」。"},
+        {id:"first-victim",name:"最初の被害者",description:"灯台守の部屋で発見された男。彼の手には古い地図の切れ端が握られていた。"},
+        {id:"old-map",name:"古い地図",description:"島の詳細な地図。しかし「X」印の場所は三箇所ある——どれが本物の宝の在処か？"},
+        {id:"hidden-passage",name:"隠し通路",description:"井戸の壁に隠された通路。灯台まで繋がっているが、途中に落とし穴がある。"},
+        {id:"second-victim",name:"二人目の被害者",description:"社の中で発見された女。首には絞められた跡と、奇妙な刺青のような模様。"},
+        {id:"sabotaged-boat",name:"破壊された船",description:"島を離れる唯一の手段だった船が、何者かに穴を開けられていた。"},
+        {id:"tide-table",name:"潮汐表",description:"灯台守が残した潮汐表。今夜の満潮は午前三時——洞窟は完全に水没する。"},
+        {id:"treasure-chest",name:"宝箱",description:"洞窟の奥で発見された古い箱。しかし中には金銀財宝ではなく、複数の人骨が詰められていた。"},
+        {id:"third-victim",name:"三人目の被害者",description:"潮溜まりに浮かぶ男の遺体。溺死——しかし、海水ではなく真水が肺に入っていた。"},
+        {id:"escape-route",name:"脱出路",description:"岩の裂け目から島の反対側に出られる。誰かが最近通った形跡がある。"}
+      ],
+      finalQuestion:"孤島連続殺人の真犯人。宝に隠された恐るべき真相とは。",
+      choices:["生き残った男・山岡（宝を独占するため仲間を排除）","生き残った女・美咲（実は灯台守の娘で復讐を実行）","死んだと思われていた灯台守（全ては偽装死だった）","島に住む謎の老婆（島を守るための殺人）"],
+      correctAnswer:1,
+      solution:"犯人は生き残った女・美咲です。\n\n【真相】\n美咲は十年前、この島で行方不明になった探検家の娘でした。父は「宝探し」に取り憑かれた仲間たちに裏切られ、洞窟に置き去りにされて溺死したのです。\n\n美咲は復讐のため、偽の宝の情報を流して父を殺した者たちの子供や関係者をこの島に誘い出しました。「宝は罠」という信号は、灯台守の最後の良心。三人目の被害者が海水ではなく真水で溺死していたのは、井戸の隠し通路で殺されたから。美咲は島の全てを知り尽くしていました。"
+    },
+    {
+      id:4,title:"雪密室",subtitle:"琴の音と白銀の殺意",location:"岡山県・旧街道筋",premium:false,
+      intro:"旧家・一条家の婚礼の夜、新郎新婦が惨殺された。離れ座敷は四方を深い雪に囲まれた完全な密室。足跡は一切ない。しかも死の直前、どこからともなく琴の音が響いたという。",
+      scenes:[
+        {id:"hanare",name:"離れ座敷",description:"事件現場。血に染まった白無垢が、雪明かりに浮かび上がる。",areas:[
+          {id:"futon",name:"布団",top:"30%",left:"35%",clueId:"wound"},
+          {id:"koto",name:"琴",top:"20%",right:"20%",clueId:"koto-string"},
+          {id:"window3",name:"雪見障子",bottom:"30%",left:"20%",clueId:"snow"},
+          {id:"tokonoma2",name:"床の間",top:"15%",left:"15%",clueId:"katana2"}
+        ]},
+        {id:"main-house2",name:"母屋",description:"婚礼の宴が行われていた本邸。祝いの席が、一転して通夜となった。",areas:[
+          {id:"hall",name:"大広間",top:"25%",left:"25%",clueId:"guest-list"},
+          {id:"kitchen",name:"台所",top:"40%",right:"15%",clueId:"knife"},
+          {id:"corridor",name:"渡り廊下",bottom:"35%",left:"40%",clueId:"wet-mark"},
+          {id:"storage2",name:"物置",bottom:"25%",right:"25%",message:"埃をかぶった古い竹馬を発見。子供用ではなく、大人が使うサイズだ。"}
+        ]},
+        {id:"garden",name:"雪の庭",description:"一面の銀世界。しかし足跡は一つもない——まるで幽霊の仕業のように。",areas:[
+          {id:"stepping",name:"飛び石",top:"30%",left:"20%",clueId:"no-footprint"},
+          {id:"pine",name:"松の木",top:"25%",right:"30%",clueId:"branch"},
+          {id:"wall",name:"塀",bottom:"30%",left:"45%",message:"高い塀で囲まれている。乗り越えた形跡はないが、塀の上に細い傷がある。"},
+          {id:"pond",name:"池",bottom:"25%",right:"20%",clueId:"frozen"}
+        ]}
+      ],
+      clues:[
+        {id:"wound",name:"傷の状態",description:"二人とも日本刀による斬殺。一太刀で絶命させる腕前——剣道の達人。"},
+        {id:"koto-string",name:"琴の弦",description:"琴の弦が一本だけ切れている。しかし演奏中に切れたにしては、切り口が鋭すぎる。"},
+        {id:"snow",name:"雪の状態",description:"障子の外は三十センチの新雪。事件発生時刻以降も雪は降り続いた。"},
+        {id:"katana2",name:"床の間の刀",description:"飾り刀が鞘から抜かれ、刃に血がべったり。一条家の家宝であり、家人以外は知らない。"},
+        {id:"guest-list",name:"出席者名簿",description:"婚礼の出席者全員に鉄壁のアリバイ。全員が大広間で宴会中。"},
+        {id:"knife",name:"研がれた包丁",description:"台所の包丁が異様なほど鋭く研がれている。「若旦那が自分で研いだ」と。"},
+        {id:"wet-mark",name:"濡れた跡",description:"渡り廊下に点々と水滴の跡。何か長いものを引きずったような。"},
+        {id:"no-footprint",name:"足跡なし",description:"飛び石にも庭にも足跡は一切ない。しかし飛び石の上だけ、雪が不自然に少ない。"},
+        {id:"branch",name:"折れた枝",description:"松の太い枝が折れている。人の体重がかかったような折れ方だ。"},
+        {id:"frozen",name:"凍った池",description:"池は完全に凍結。表面に薄い傷——スケートの刃のような跡がある。"}
+      ],
+      finalQuestion:"雪の密室殺人。犯人はいかにして足跡を残さず犯行に及んだのか。",
+      choices:["母屋の屋根から渡り廊下を伝い、空中を移動した","事件前から離れの天井裏に潜んでいた","凍った池をスケートで渡り、雪が降る前に戻った","竹馬で飛び石の上だけを踏んで往復した"],
+      correctAnswer:3,
+      solution:"犯人は「竹馬」を使いました。\n\n【真相】\n犯人は大人用の竹馬を使い、飛び石の上だけを踏んで離れに向かいました。竹馬の先端は細く、飛び石の上に残る跡は雪が溶けただけに見える。\n\n松の枝が折れていたのは、バランスを崩した際に掴んだため。渡り廊下の水滴は、竹馬についた雪が溶けて滴り落ちたもの。\n\n琴の音の正体——犯人が張っておいた弦のトラップ。帰りも同じ方法で飛び石を踏んで戻り、その後降った雪が全ての痕跡を消しました。"
+    },
+    {id:5,title:"時計塔の処刑人",subtitle:"十二の鐘が告げる死",location:"長野県・霧ヶ峰高原",premium:true,
+      intro:"高原に建つ古い時計塔で、連続殺人が発生。被害者は全員、時計塔の鐘が鳴る瞬間に殺されている——九時、十時、十一時。次の正午の鐘が鳴るとき、四人目の犠牲者が出るのか。",
+      scenes:[],clues:[],finalQuestion:"",choices:[],correctAnswer:3,solution:""
+    },
+    {id:6,title:"歩く能面",subtitle:"夜を彷徨う般若の狂気",location:"京都・西陣",premium:true,
+      intro:"京都の織物商・八雲家で、能舞台を模した座敷から当主の遺体が発見された。死の直前、彼は能面をつけて舞っていたという。",
+      scenes:[],clues:[],finalQuestion:"",choices:[],correctAnswer:1,solution:""
+    }
+  ];
+
+  const sampleTheories = [
+    {id:"t1",episodeId:1,author:"闇の考察者",avatar:"K",content:"血の手形の大きさに注目。被害者の手より小さいということは、女性か子供。養子の健一には恋人がいた可能性が高い。共犯者がいるのでは？",likes:47,replies:12,timestamp:"2時間前",isSpoiler:false},
+    {id:"t2",episodeId:1,author:"推理の鬼",avatar:"S",content:"囲炉裏の灰から見つかった遺言状の燃え残りが最大のポイント。「真の相続人は」の続きが気になる。健一は養子だから相続権に不安があったはず。",likes:35,replies:8,timestamp:"5時間前",isSpoiler:false},
+    {id:"t3",episodeId:2,author:"湖畔の探偵",avatar:"M",content:"外科結びに注目した人いる？これは医学の知識がある人物を示している。清司は元医学生。これが決定的な証拠だと思う。",likes:29,replies:6,timestamp:"1日前",isSpoiler:true},
+    {id:"t4",episodeId:3,author:"孤島マニア",avatar:"T",content:"三人目の被害者の肺に海水ではなく真水が入っていたのが最大のヒント。海で溺死したなら海水のはず。つまり殺害場所は海ではない。",likes:52,replies:15,timestamp:"3時間前",isSpoiler:false},
+    {id:"t5",episodeId:4,author:"雪国探偵",avatar:"Y",content:"物置の竹馬と飛び石の雪の少なさは繋がっている。竹馬なら飛び石だけを踏んで移動できる。天才的なトリックだ。",likes:41,replies:9,timestamp:"12時間前",isSpoiler:true}
+  ];
+
+  const sampleSubmissions = [
+    {id:"s1",author:"ミステリー愛好家",avatar:"A",title:"廃病院の白い影",subtitle:"閉鎖された病棟に響くナースコール",location:"北海道・旭川",status:"featured",votes:128,timestamp:"3日前"},
+    {id:"s2",author:"地方伝承研究家",avatar:"R",title:"水底の鬼婆",subtitle:"ダムに沈んだ村の呪い",location:"秋田県・深山ダム",status:"approved",votes:87,timestamp:"1週間前"},
+    {id:"s3",author:"怪談コレクター",avatar:"H",title:"首なし地蔵の祟り",subtitle:"六体の地蔵が示す死の順番",location:"四国・祖谷渓谷",status:"reviewing",votes:34,timestamp:"2日前"}
+  ];
+
+  function getRank(cleared) {
+    if (cleared >= 10) return "闇を見通す者";
+    if (cleared >= 7) return "深淵の探求者";
+    if (cleared >= 4) return "真実の追跡者";
+    if (cleared >= 1) return "見習い探偵";
+    return "一般人";
+  }
+
+  // ===== STATE =====
+  let state = {
+    currentPage: "home",
+    currentEpisode: null,
+    currentSceneIndex: 0,
+    gamePhase: "intro",
+    foundClues: [],
+    selectedAnswer: null,
+    completedEpisodes: JSON.parse(localStorage.getItem("completedEpisodes") || "[]"),
+    // community
+    communityFilter: null,
+    communitySortBy: "popular",
+    revealedSpoilers: [],
+    likedTheories: [],
+    newTheory: "",
+    isSpoiler: false,
+    // submission
+    showSubmitForm: false,
+    votedSubmissions: [],
+  };
+
+  function saveCompleted() {
+    localStorage.setItem("completedEpisodes", JSON.stringify(state.completedEpisodes));
+  }
+
+  // ===== SVG ICONS =====
+  const icons = {
+    home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
+    list: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>',
+    chat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+    pen: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
+    user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+    back: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="m15 18-6-6 6-6"/></svg>',
+    pin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>',
+    check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M20 6 9 17l-5-5"/></svg>',
+    x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>',
+    heart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>',
+    heartFilled: '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>',
+    reply: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+    upvote: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="m18 15-6-6-6 6"/></svg>',
+    flame: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>',
+    search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="48" height="48"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>',
+    warn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+    shield: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="40" height="40"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+    trophy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>',
+    share: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>',
+    trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>',
+    send: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>',
+    eye: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>',
+    eyeoff: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></svg>',
+    users: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+    chevron: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="m9 18 6-6-6-6"/></svg>',
+  };
+
+  // ===== RENDER =====
+  function render() {
+    const app = document.getElementById("app");
+    if (state.currentEpisode) {
+      app.innerHTML = renderGame();
+    } else {
+      app.innerHTML = renderHeader() + '<div class="main-content" style="padding-top:1rem">' + renderCurrentPage() + '</div>' + renderNav();
+    }
+    attachEvents();
+  }
+
+  function renderHeader() {
+    return `<div class="header"><h1>深淵の探偵録</h1><p>〜闇に潜む真実を暴け〜</p></div>`;
+  }
+
+  function renderNav() {
+    const items = [
+      {id:"home",icon:icons.home,label:"事件簿"},
+      {id:"list",icon:icons.list,label:"一覧"},
+      {id:"community",icon:icons.chat,label:"考察"},
+      {id:"submit",icon:icons.pen,label:"投稿"},
+      {id:"profile",icon:icons.user,label:"探偵"}
+    ];
+    return `<nav class="nav">${items.map(i=>`<button class="nav-item${state.currentPage===i.id?' active':''}" data-nav="${i.id}"><span class="nav-icon">${i.icon}</span>${i.label}</button>`).join("")}</nav>`;
+  }
+
+  function renderCurrentPage() {
+    switch(state.currentPage) {
+      case "home": return renderHomePage();
+      case "list": return renderListPage();
+      case "community": return renderCommunityPage();
+      case "submit": return renderSubmitPage();
+      case "profile": return renderProfilePage();
+      default: return "";
+    }
+  }
+
+  // ===== EPISODE CARD =====
+  function renderEpisodeCard(ep) {
+    const completed = state.completedEpisodes.includes(ep.id);
+    return `<div class="episode-card${ep.premium?' premium':''}" data-episode="${ep.id}">
+      ${ep.premium?'<span class="premium-badge">PREMIUM</span>':''}
+      <div style="display:flex;gap:.5rem;margin-bottom:.5rem">
+        ${!ep.premium?'<span class="badge badge-free">無料</span>':''}
+        ${completed?'<span class="badge badge-clear">解決済</span>':''}
+      </div>
+      <div class="episode-title">${ep.title}</div>
+      <div class="episode-subtitle">${ep.subtitle}</div>
+      <div class="episode-location">${icons.pin} ${ep.location}</div>
+    </div>`;
+  }
+
+  // ===== HOME PAGE =====
+  function renderHomePage() {
+    const free = episodes.filter(e=>!e.premium);
+    const premium = episodes.filter(e=>e.premium);
+    const unsolved = free.filter(e=>!state.completedEpisodes.includes(e.id));
+    const featured = unsolved.length > 0 ? unsolved[0] : free[0];
+    const recentTheories = sampleTheories.slice(0,2);
+
+    return `
+      <div class="card" style="text-align:center">
+        <p style="font-size:.875rem;letter-spacing:.2em;color:#6b0000;margin-bottom:.75rem">〜 本日の事件 〜</p>
+        ${renderEpisodeCard(featured)}
+      </div>
+      <div class="warning-box">${icons.warn}<p>この物語には残虐な描写が含まれます</p></div>
+      <div class="card">
+        <div class="section-header">
+          <h2 class="section-title">${icons.flame} 注目の考察</h2>
+          <button class="section-link" data-nav="community">もっと見る ${icons.chevron}</button>
+        </div>
+        ${recentTheories.map(t=>{
+          const ep = episodes.find(e=>e.id===t.episodeId);
+          return `<div style="background:#2d1515;border-radius:.5rem;padding:.75rem;margin-bottom:.75rem;border:1px solid #3d1515">
+            <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem">
+              <div class="avatar" style="width:28px;height:28px;font-size:.7rem">${t.avatar}</div>
+              <span style="font-weight:bold;font-size:.875rem">${t.author}</span>
+              ${ep?`<span style="font-size:.75rem;color:#6b0000">${ep.title}</span>`:''}
+            </div>
+            <p style="font-size:.85rem;color:#8a8070;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${t.content}</p>
+            <div style="display:flex;gap:.75rem;margin-top:.5rem;font-size:.75rem;color:#8a8070">
+              <span>${icons.flame} ${t.likes}</span>
+              <span>${icons.reply} ${t.replies}</span>
+            </div>
+          </div>`;
+        }).join("")}
+      </div>
+      ${unsolved.length>0?`<div class="card"><div class="card-title">未解決事件簿</div>${unsolved.slice(0,4).map(e=>renderEpisodeCard(e)).join("")}</div>`:''}
+      <div class="card">
+        <div class="community-cta">
+          <div class="cta-icon">${icons.users}</div>
+          <div><h3 style="font-weight:bold">探偵コミュニティに参加</h3><p style="font-size:.875rem;color:#8a8070">考察を共有し、新事件を投稿しよう</p></div>
+        </div>
+        <div class="cta-btns">
+          <button class="btn btn-secondary" data-nav="community">考察を見る</button>
+          <button class="btn btn-amber" data-nav="submit">事件を投稿</button>
+        </div>
+      </div>
+      <div class="premium-section">
+        <div class="card-title" style="border-bottom:1px solid #3d1515;padding-bottom:.5rem">月額会員限定 〜深淵編〜</div>
+        ${premium.slice(0,2).map(e=>renderEpisodeCard(e)).join("")}
+        <button class="btn btn-amber btn-full" data-nav="profile">月額100円で全事件解放</button>
+      </div>`;
+  }
+
+  // ===== LIST PAGE =====
+  function renderListPage() {
+    const free = episodes.filter(e=>!e.premium);
+    const premium = episodes.filter(e=>e.premium);
+    return `
+      <div class="card"><div class="card-title">無料事件（${free.length}件）</div>${free.map(e=>renderEpisodeCard(e)).join("")}</div>
+      <div class="premium-section"><div class="card-title">深淵編（${premium.length}件）</div>${premium.map(e=>renderEpisodeCard(e)).join("")}</div>`;
+  }
+
+  // ===== COMMUNITY PAGE =====
+  function renderCommunityPage() {
+    const filtered = sampleTheories
+      .filter(t=>!state.communityFilter||t.episodeId===state.communityFilter)
+      .sort((a,b)=>state.communitySortBy==="popular"?b.likes-a.likes:0);
+    const freeEps = episodes.filter(e=>!e.premium);
+
+    return `
+      <div class="card"><h2 style="font-size:1.125rem;font-weight:bold;color:#c9a55c;margin-bottom:.25rem">考察広場</h2><p style="font-size:.875rem;color:#8a8070">探偵たちの推理を共有し、事件の真相に迫ろう</p></div>
+      <div class="filter-chips">
+        <button class="chip${!state.communityFilter?' active':''}" data-filter="all">全て</button>
+        ${freeEps.map(e=>`<button class="chip${state.communityFilter===e.id?' active':''}" data-filter="${e.id}">${e.title}</button>`).join("")}
+      </div>
+      <div class="sort-btns">
+        <button class="sort-btn${state.communitySortBy==="popular"?' active':''}" data-sort="popular">人気順</button>
+        <button class="sort-btn${state.communitySortBy==="recent"?' active':''}" data-sort="recent">新着順</button>
+      </div>
+      <div class="card" style="padding:1rem">
+        <h3 style="font-size:.875rem;font-weight:bold;color:#c9a55c;margin-bottom:.75rem">あなたの考察を投稿</h3>
+        <textarea class="text-area" rows="3" placeholder="この事件の真相について、あなたの推理は？" id="theoryInput"></textarea>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:.75rem">
+          <button class="btn" style="font-size:.75rem;padding:.4rem .75rem;min-height:auto;background:${state.isSpoiler?'#2d2010':'#2d1515'};color:${state.isSpoiler?'#c9a55c':'#8a8070'};border:1px solid ${state.isSpoiler?'#5c4510':'#3d1515'}" data-action="toggle-spoiler">${state.isSpoiler?icons.eyeoff:icons.eye} ネタバレあり</button>
+          <button class="btn btn-primary" style="font-size:.875rem;padding:.5rem 1rem;min-height:auto;display:flex;align-items:center;gap:.4rem" data-action="post-theory">${icons.send} 投稿する</button>
+        </div>
+      </div>
+      ${filtered.map(t=>{
+        const ep = episodes.find(e=>e.id===t.episodeId);
+        const isRevealed = state.revealedSpoilers.includes(t.id);
+        const isLiked = state.likedTheories.includes(t.id);
+        return `<div class="theory-card">
+          <div class="theory-header">
+            <div class="avatar">${t.avatar}</div>
+            <div class="theory-meta">
+              <div style="display:flex;align-items:center;gap:.5rem">
+                <span class="theory-author">${t.author}</span>
+                <span class="theory-time">${t.timestamp}</span>
+              </div>
+              ${ep?`<span class="theory-episode">${ep.title}</span>`:''}
+            </div>
+          </div>
+          ${t.isSpoiler&&!isRevealed?
+            `<div class="spoiler-cover" data-reveal="${t.id}"><p>${icons.eyeoff} ネタバレを含む考察です。タップして表示</p></div>`:
+            `<div class="theory-content">${t.content}</div>`
+          }
+          <div class="theory-actions">
+            <button class="theory-action${isLiked?' liked':''}" data-like="${t.id}">${isLiked?icons.heartFilled:icons.heart} ${t.likes+(isLiked?1:0)}</button>
+            <button class="theory-action">${icons.reply} ${t.replies}</button>
+          </div>
+        </div>`;
+      }).join("")}
+      ${filtered.length===0?'<div class="card" style="text-align:center;padding:2rem"><p style="color:#8a8070">まだ考察がありません。最初の考察を投稿しましょう！</p></div>':''}`;
+  }
+
+  // ===== SUBMIT PAGE =====
+  function renderSubmitPage() {
+    const featured = sampleSubmissions.filter(s=>s.status==="featured");
+    const approved = sampleSubmissions.filter(s=>s.status==="approved");
+    const reviewing = sampleSubmissions.filter(s=>s.status==="reviewing");
+
+    return `
+      <div class="card"><h2 style="font-size:1.125rem;font-weight:bold;color:#c9a55c;margin-bottom:.25rem">事件投稿所</h2><p style="font-size:.875rem;color:#8a8070">あなたが考えた事件を投稿し、コミュニティの投票で公式エピソードに採用されよう</p></div>
+      <div class="card">
+        <h3 style="font-size:.875rem;font-weight:bold;color:#c9a55c;margin-bottom:1rem">事件が採用されるまで</h3>
+        <div class="step-flow">
+          <div class="step-item"><div class="step-icon">${icons.send}</div><div class="step-text"><h4>事件を投稿</h4><p>タイトル、舞台、あらすじを投稿</p></div></div>
+          <div class="step-connector"></div>
+          <div class="step-item"><div class="step-icon">${icons.check}</div><div class="step-text"><h4>コミュニティ審査</h4><p>探偵たちの投票で評価</p></div></div>
+          <div class="step-connector"></div>
+          <div class="step-item"><div class="step-icon">${icons.trophy}</div><div class="step-text"><h4>公式採用</h4><p>高評価の事件が正式エピソードに</p></div></div>
+        </div>
+      </div>
+      <button class="btn btn-amber btn-full" data-action="toggle-form">新しい事件を投稿する</button>
+      ${state.showSubmitForm?`<div class="card" style="border:2px solid rgba(201,165,92,.3);margin-top:1rem">
+        <h3 style="font-size:.875rem;font-weight:bold;color:#c9a55c;margin-bottom:1rem">事件概要を入力</h3>
+        <div style="margin-bottom:1rem"><label style="display:block;font-size:.875rem;color:#8a8070;margin-bottom:.5rem">事件名</label><input class="input-field" placeholder="例：廃病院の白い影"></div>
+        <div style="margin-bottom:1rem"><label style="display:block;font-size:.875rem;color:#8a8070;margin-bottom:.5rem">副題</label><input class="input-field" placeholder="例：閉鎖された病棟に響くナースコール"></div>
+        <div style="margin-bottom:1rem"><label style="display:block;font-size:.875rem;color:#8a8070;margin-bottom:.5rem">舞台</label><input class="input-field" placeholder="例：北海道・旭川"></div>
+        <div style="margin-bottom:1rem"><label style="display:block;font-size:.875rem;color:#8a8070;margin-bottom:.5rem">あらすじ</label><textarea class="text-area" rows="5" placeholder="事件の導入部分を書いてください..."></textarea></div>
+        <button class="btn btn-amber btn-full">投稿する</button>
+      </div>`:''}
+      ${featured.length>0?`<div style="margin-top:1rem"><div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.75rem"><span style="color:#c9a55c">${icons.trophy}</span><h3 style="font-size:.875rem;font-weight:bold;color:#c9a55c">注目の投稿</h3></div>${featured.map(s=>renderSubmissionCard(s)).join("")}</div>`:''}
+      ${approved.length>0?`<div style="margin-top:1rem"><div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.75rem"><span style="color:#6b8b6b">${icons.check}</span><h3 style="font-size:.875rem;font-weight:bold">承認済み</h3></div>${approved.map(s=>renderSubmissionCard(s)).join("")}</div>`:''}
+      ${reviewing.length>0?`<div style="margin-top:1rem"><div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.75rem"><h3 style="font-size:.875rem;font-weight:bold;color:#8a8070">審査中</h3></div>${reviewing.map(s=>renderSubmissionCard(s)).join("")}</div>`:''}`;
+  }
+
+  function renderSubmissionCard(sub) {
+    const isVoted = state.votedSubmissions.includes(sub.id);
+    const classes = {featured:"featured",approved:"approved",reviewing:""}[sub.status];
+    const statusLabel = {featured:{t:"注目",c:"status-featured"},approved:{t:"承認済",c:"status-approved"},reviewing:{t:"審査中",c:"status-reviewing"}}[sub.status];
+    return `<div class="submission-card ${classes}">
+      <button class="vote-box${isVoted?' voted':''}" data-vote="${sub.id}">${icons.upvote}<span class="vote-count">${sub.votes+(isVoted?1:0)}</span></button>
+      <div class="submission-info">
+        <div style="display:flex;gap:.5rem;align-items:center"><span class="submission-status ${statusLabel.c}">${statusLabel.t}</span><span style="font-size:.75rem;color:#8a8070">${sub.timestamp}</span></div>
+        <div class="submission-title">${sub.title}</div>
+        <div class="submission-subtitle">${sub.subtitle}</div>
+        <div class="submission-meta"><span class="submission-location">${icons.pin} ${sub.location}</span><span>${sub.author}</span></div>
+      </div>
+    </div>`;
+  }
+
+  // ===== PROFILE PAGE =====
+  function renderProfilePage() {
+    const cleared = state.completedEpisodes.length;
+    const total = episodes.length;
+    const rank = getRank(cleared);
+    const freeCleared = state.completedEpisodes.filter(id=>!episodes.find(e=>e.id===id)?.premium).length;
+    const freeTotal = episodes.filter(e=>!e.premium).length;
+
+    const tiers = [
+      {name:"一般人",min:0,icon:"👤"},
+      {name:"見習い探偵",min:1,icon:"🎯"},
+      {name:"真実の追跡者",min:4,icon:"📖"},
+      {name:"深淵の探求者",min:7,icon:"🔥"},
+      {name:"闇を見通す者",min:10,icon:"🏆"}
+    ];
+    const currentIdx = tiers.findIndex(t=>t.name===rank);
+    const nextTier = tiers[currentIdx+1];
+
+    return `
+      <div class="profile-card" style="margin-bottom:1rem">
+        <div class="profile-icon">${icons.shield}</div>
+        <div class="rank-name">${rank}</div>
+        <p style="font-size:.875rem;color:#8a8070;margin-top:.5rem">解決事件数: ${cleared} / ${total}</p>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-icon" style="color:#6b0000">📖</div><div class="stat-label">無料事件</div><div class="stat-value">${freeCleared}/${freeTotal}</div></div>
+        <div class="stat-card"><div class="stat-icon" style="color:#c9a55c">🏆</div><div class="stat-label">探偵ランク</div><div class="stat-value" style="font-size:.8rem">${rank}</div></div>
+        <div class="stat-card"><div class="stat-icon" style="color:#8a8070">💬</div><div class="stat-label">考察投稿</div><div class="stat-value">0</div></div>
+        <div class="stat-card"><div class="stat-icon" style="color:#6b8b6b">📈</div><div class="stat-label">事件投稿</div><div class="stat-value">0</div></div>
+      </div>
+      <div class="card">
+        <h3 style="font-size:.875rem;font-weight:bold;color:#c9a55c;margin-bottom:1rem">探偵ランク進捗</h3>
+        ${tiers.map(t=>{
+          const achieved = cleared >= t.min;
+          const isCurrent = t.name === rank;
+          return `<div class="rank-item${isCurrent?' current':''}${achieved&&!isCurrent?' achieved':''}">
+            <div class="rank-icon-box ${achieved?'active':'inactive'}">${t.icon}</div>
+            <div class="rank-info"><h4 style="color:${achieved?'#e8e4d9':'#8a8070'}">${t.name}</h4><p>${t.min===0?'初期ランク':t.min+'件以上解決'}</p></div>
+            ${isCurrent?'<span class="rank-badge">現在</span>':''}
+            ${achieved&&!isCurrent?'<span style="font-size:.75rem;color:#6b8b6b">達成</span>':''}
+          </div>`;
+        }).join("")}
+        ${nextTier?`<div style="margin-top:1rem;padding:.75rem;border-radius:.5rem;border:1px solid #3d1515;background:#2d1515;text-align:center"><p style="font-size:.875rem;color:#8a8070">次のランク「${nextTier.name}」まであと <span style="font-weight:bold;color:#c9a55c">${nextTier.min-cleared}件</span></p></div>`:''}
+      </div>
+      <button class="btn btn-secondary btn-full" style="display:flex;align-items:center;justify-content:center;gap:.5rem;margin-bottom:1rem" data-action="share">${icons.share} 実績をシェアする</button>
+      <div class="premium-section">
+        <h3>深淵会員</h3>
+        <p style="font-size:.875rem;color:#8a8070;margin-bottom:1rem">月額100円で全ての闇に挑む</p>
+        <div style="text-align:left;margin-bottom:1rem">
+          <div class="premium-feature"><span class="premium-dot"></span>全エピソード解放 + 毎月新作</div>
+          <div class="premium-feature"><span class="premium-dot"></span>限定の考察コミュニティ</div>
+          <div class="premium-feature"><span class="premium-dot"></span>事件投稿の優先審査</div>
+          <div class="premium-feature"><span class="premium-dot"></span>推理ヒント機能</div>
+        </div>
+        <button class="btn btn-amber btn-full">月額100円で始める</button>
+        <p style="font-size:.75rem;color:#8a8070;margin-top:.5rem">いつでも解約可能</p>
+      </div>
+      <button class="btn btn-danger btn-full" style="display:flex;align-items:center;justify-content:center;gap:.5rem;margin-bottom:1rem" data-action="reset">${icons.trash} 進行状況をリセット</button>
+      <p style="text-align:center;font-size:.75rem;color:#8a8070;margin-bottom:2rem">バージョン 4.0.0 - 関係性ビジネス拡張版</p>`;
+  }
+
+  // ===== GAME =====
+  function renderGame() {
+    const ep = state.currentEpisode;
+    const scene = ep.scenes[state.currentSceneIndex];
+    const foundCount = state.foundClues.length;
+    const totalClues = ep.clues.length;
+    const canSolve = foundCount >= Math.ceil(totalClues * 0.6);
+
+    let content = '';
+
+    // Game header
+    content += `<div class="game-header">
+      <button class="btn btn-secondary" style="padding:.5rem .75rem;min-height:auto;font-size:.875rem" data-action="exit-game">${icons.back}</button>
+      <h1 style="font-size:.875rem;font-weight:bold;color:#c9a55c;text-align:center;flex:1;margin:0 .5rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${ep.title}</h1>
+      <button class="btn btn-secondary" style="padding:.5rem .75rem;min-height:auto;font-size:.875rem;position:relative" data-action="show-clues">手がかり${foundCount>0?`<span class="clue-badge">${foundCount}</span>`:''}</button>
+    </div>`;
+
+    // Intro
+    if (state.gamePhase === "intro") {
+      content += `<div class="intro-screen">
+        <div class="intro-icon" style="color:#6b0000">${icons.search}</div>
+        <h2 style="font-size:1.25rem;font-weight:bold;color:#c9a55c;margin-bottom:.5rem">${ep.title}</h2>
+        <p style="font-size:.875rem;color:#8a8070">${ep.subtitle}</p>
+        <p style="font-size:.75rem;color:#6b0000;margin-top:.25rem">${ep.location}</p>
+        <div style="margin-top:1.5rem;max-width:400px;width:100%;padding:1.25rem;border-radius:.5rem;border:1px solid #3d1515;border-left:3px solid #6b0000;background:linear-gradient(to bottom,#2d1515,#1a0a0a);text-align:left">
+          <p style="line-height:1.8">${ep.intro}</p>
+        </div>
+        <button class="btn btn-primary btn-full" style="margin-top:1.5rem;max-width:400px" data-action="start-explore">捜査を開始する</button>
+      </div>`;
+    }
+
+    // Explore
+    if (state.gamePhase === "explore" && scene) {
+      content += `<div class="scene-tabs">${ep.scenes.map((s,i)=>`<button class="scene-tab${i===state.currentSceneIndex?' active':''}" data-scene="${i}">${s.name}</button>`).join("")}</div>`;
+      content += `<div class="explore-scene"><div class="scene-label">${scene.name}</div>`;
+      scene.areas.forEach(area => {
+        const found = area.clueId && state.foundClues.includes(area.clueId);
+        const style = `${area.top?'top:'+area.top+';':''}${area.bottom?'bottom:'+area.bottom+';':''}${area.left?'left:'+area.left+';':''}${area.right?'right:'+area.right+';':''}`;
+        content += `<button class="area-point ${found?'discovered':'undiscovered'}" style="${style}" data-area="${area.id}">${found?'<span style="color:#228b22">'+icons.check+'</span>':'<span style="font-size:1.5rem">?</span>'}</button>`;
+      });
+      content += `<div class="scene-description"><p style="font-size:.875rem;color:#8a8070">${scene.description}</p></div></div>`;
+      content += `<div class="progress-section">
+        <div class="progress-text"><span>収集した手がかり</span><span>${foundCount} / ${totalClues}</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${(foundCount/totalClues)*100}%"></div></div>
+        <button class="btn btn-primary btn-full" ${!canSolve?'disabled':''} data-action="start-solve">${canSolve?'推理を開始する':`あと${Math.ceil(totalClues*0.6)-foundCount}個の手がかりが必要`}</button>
+      </div>`;
+    }
+
+    // Solve
+    if (state.gamePhase === "solve") {
+      content += `<div style="padding:1rem;padding-bottom:6rem">
+        <div class="card">
+          <p style="text-align:center;font-size:.875rem;letter-spacing:.2em;color:#6b0000;margin-bottom:1rem">〜 推理編 〜</p>
+          <h3 style="text-align:center;font-size:1.125rem;font-weight:bold;color:#c9a55c;margin-bottom:1.5rem">${ep.finalQuestion}</h3>
+          ${ep.choices.map((c,i)=>`<button class="choice-btn${state.selectedAnswer===i?' selected':''}" data-choice="${i}">${c}</button>`).join("")}
+        </div>
+        <button class="btn btn-primary btn-full" ${state.selectedAnswer===null?'disabled':''} data-action="submit-answer">推理を確定する</button>
+      </div>`;
+    }
+
+    // Result
+    if (state.gamePhase === "result") {
+      const isCorrect = state.selectedAnswer === ep.correctAnswer;
+      content += `<div style="padding:1rem;padding-bottom:6rem">
+        <div class="${isCorrect?'result-correct':'result-wrong'}">
+          <div class="result-icon">${isCorrect?'<span style="color:#228b22">'+icons.check+'</span>':'<span style="color:#c44">'+icons.x+'</span>'}</div>
+          <h3 style="font-size:1.25rem;font-weight:bold;color:${isCorrect?'#6b8b6b':'#c44'}">${isCorrect?'事件解決！':'推理失敗...'}</h3>
+          <p style="font-size:.875rem;color:#8a8070;margin-top:.5rem">${isCorrect?'見事、真犯人を見抜きました。':'残念、真相は違いました。闇はまだ深い...'}</p>
+        </div>
+        <div class="card"><p style="text-align:center;font-size:.875rem;letter-spacing:.2em;color:#6b0000;margin-bottom:1rem">〜 解決編 〜</p><div class="solution-box">${ep.solution}</div></div>
+        <button class="btn btn-primary btn-full" data-action="exit-game">事件簿に戻る</button>
+      </div>`;
+    }
+
+    return content;
+  }
+
+  // ===== EVENTS =====
+  function attachEvents() {
+    // Navigation
+    document.querySelectorAll("[data-nav]").forEach(el => {
+      el.onclick = () => { state.currentPage = el.dataset.nav; render(); };
+    });
+
+    // Episode cards
+    document.querySelectorAll("[data-episode]").forEach(el => {
+      el.onclick = () => {
+        const ep = episodes.find(e => e.id === parseInt(el.dataset.episode));
+        if (ep && !ep.premium) {
+          state.currentEpisode = ep;
+          state.gamePhase = "intro";
+          state.foundClues = [];
+          state.selectedAnswer = null;
+          state.currentSceneIndex = 0;
+          render();
+        } else if (ep && ep.premium) {
+          state.currentPage = "profile";
+          render();
+        }
+      };
+    });
+
+    // Game actions
+    document.querySelectorAll("[data-action='exit-game']").forEach(el => {
+      el.addEventListener("click", () => {
+        state.currentEpisode = null;
+        render();
+      });
+    });
+    document.querySelector("[data-action='start-explore']")?.addEventListener("click", () => {
+      state.gamePhase = "explore";
+      render();
+    });
+    document.querySelector("[data-action='start-solve']")?.addEventListener("click", () => {
+      state.gamePhase = "solve";
+      render();
+    });
+    document.querySelector("[data-action='submit-answer']")?.addEventListener("click", () => {
+      if (state.selectedAnswer === null) return;
+      const ep = state.currentEpisode;
+      const isCorrect = state.selectedAnswer === ep.correctAnswer;
+      if (isCorrect && !state.completedEpisodes.includes(ep.id)) {
+        state.completedEpisodes.push(ep.id);
+        saveCompleted();
+      }
+      state.gamePhase = "result";
+      render();
+    });
+
+    // Scene tabs
+    document.querySelectorAll("[data-scene]").forEach(el => {
+      el.onclick = () => { state.currentSceneIndex = parseInt(el.dataset.scene); render(); };
+    });
+
+    // Area points
+    document.querySelectorAll("[data-area]").forEach(el => {
+      el.onclick = () => {
+        const ep = state.currentEpisode;
+        const scene = ep.scenes[state.currentSceneIndex];
+        const area = scene.areas.find(a => a.id === el.dataset.area);
+        if (!area) return;
+
+        if (area.clueId && !state.foundClues.includes(area.clueId)) {
+          state.foundClues.push(area.clueId);
+          const clue = ep.clues.find(c => c.id === area.clueId);
+          if (clue) showModal("手がかり発見！", `<p style="font-weight:bold;color:#c9a55c;margin-bottom:.5rem">${clue.name}</p><p style="line-height:1.8;color:#8a8070">${clue.description}</p>`);
+          else render();
+        } else if (area.message) {
+          showModal("調査結果", `<p style="line-height:1.8;color:#8a8070">${area.message}</p>`);
+        } else if (area.clueId) {
+          showModal("調査結果", `<p style="line-height:1.8;color:#8a8070">この場所は既に調査済みです。</p>`);
+        }
+      };
+    });
+
+    // Choices
+    document.querySelectorAll("[data-choice]").forEach(el => {
+      el.onclick = () => { state.selectedAnswer = parseInt(el.dataset.choice); render(); };
+    });
+
+    // Clue list
+    document.querySelector("[data-action='show-clues']")?.addEventListener("click", () => {
+      const ep = state.currentEpisode;
+      const found = ep.clues.filter(c => state.foundClues.includes(c.id));
+      const body = found.length > 0
+        ? found.map(c => `<div style="margin-bottom:.75rem;padding:1rem;border-radius:.5rem;border-left:3px solid #6b0000;background:#2d1515"><p style="font-weight:bold;color:#c9a55c;margin-bottom:.25rem">${c.name}</p><p style="font-size:.875rem;line-height:1.8;color:#8a8070">${c.description}</p></div>`).join("")
+        : '<p style="text-align:center;padding:2rem;color:#8a8070">まだ手がかりがありません</p>';
+      showModal("収集した手がかり", body);
+    });
+
+    // Community
+    document.querySelectorAll("[data-filter]").forEach(el => {
+      el.onclick = () => { state.communityFilter = el.dataset.filter === "all" ? null : parseInt(el.dataset.filter); render(); };
+    });
+    document.querySelectorAll("[data-sort]").forEach(el => {
+      el.onclick = () => { state.communitySortBy = el.dataset.sort; render(); };
+    });
+    document.querySelectorAll("[data-reveal]").forEach(el => {
+      el.onclick = () => { state.revealedSpoilers.push(el.dataset.reveal); render(); };
+    });
+    document.querySelectorAll("[data-like]").forEach(el => {
+      el.onclick = () => {
+        const id = el.dataset.like;
+        if (state.likedTheories.includes(id)) state.likedTheories = state.likedTheories.filter(l=>l!==id);
+        else state.likedTheories.push(id);
+        render();
+      };
+    });
+    document.querySelector("[data-action='toggle-spoiler']")?.addEventListener("click", () => {
+      state.isSpoiler = !state.isSpoiler; render();
+    });
+
+    // Submission
+    document.querySelector("[data-action='toggle-form']")?.addEventListener("click", () => {
+      state.showSubmitForm = !state.showSubmitForm; render();
+    });
+    document.querySelectorAll("[data-vote]").forEach(el => {
+      el.onclick = () => {
+        const id = el.dataset.vote;
+        if (state.votedSubmissions.includes(id)) state.votedSubmissions = state.votedSubmissions.filter(v=>v!==id);
+        else state.votedSubmissions.push(id);
+        render();
+      };
+    });
+
+    // Profile
+    document.querySelector("[data-action='reset']")?.addEventListener("click", () => {
+      if (confirm("本当に進行状況をリセットしますか？")) {
+        state.completedEpisodes = [];
+        localStorage.removeItem("completedEpisodes");
+        render();
+      }
+    });
+    document.querySelector("[data-action='share']")?.addEventListener("click", () => {
+      const rank = getRank(state.completedEpisodes.length);
+      const text = `【深淵の探偵録】探偵ランク「${rank}」に到達！${state.completedEpisodes.length}件の事件を解決しました。あなたも闇に挑む覚悟はあるか？`;
+      if (navigator.share) navigator.share({title:"深淵の探偵録",text});
+      else { navigator.clipboard.writeText(text); alert("実績をクリップボードにコピーしました！"); }
+    });
+  }
+
+  function showModal(title, body) {
+    const overlay = document.createElement("div");
+    overlay.className = "modal-overlay";
+    overlay.innerHTML = `<div class="modal-content">
+      <h3 style="font-size:1.25rem;font-weight:bold;color:#c9a55c;margin-bottom:1rem">${title}</h3>
+      ${body}
+      <button class="btn btn-primary btn-full" style="margin-top:1rem" id="modalClose">閉じる</button>
+    </div>`;
+    document.body.appendChild(overlay);
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) { overlay.remove(); render(); } });
+    document.getElementById("modalClose").addEventListener("click", () => { overlay.remove(); render(); });
+  }
+
+  // ===== INIT =====
+  render();
+  </script>
+</body>
+</html>
